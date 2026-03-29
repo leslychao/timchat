@@ -1,0 +1,46 @@
+---
+description: Correctness, edge cases, compatibility, observability, and test coverage rule
+alwaysApply: true
+---
+
+# Correctness / tests / observability rule
+
+Любое нетривиальное изменение должно сопровождаться проверкой корректности.
+
+Всегда думай о:
+- compile-time correctness;
+- runtime behavior;
+- edge cases;
+- backward compatibility;
+- error handling;
+- logging / observability;
+- test coverage.
+
+При изменениях в:
+- business logic;
+- integrations;
+- mapping;
+- SQL;
+- state transitions;
+
+обязательно проверяй:
+- happy path;
+- edge cases;
+- failure cases;
+- regression scenarios;
+- integration scenarios, если меняется контракт или поток данных.
+
+Если тесты не пишутся прямо сейчас, все равно перечисли:
+- что именно нужно протестировать;
+- какие риски остаются непокрытыми.
+
+Ошибки должны обрабатываться осмысленно:
+- точные типы ошибок;
+- понятные сообщения;
+- не глотать исключения;
+- не маскировать реальные дефекты generic error handling.
+
+Изменение должно:
+- компилироваться;
+- не ломать существующий контракт без явного указания;
+- соответствовать стилю проекта, если нет причины его улучшить.

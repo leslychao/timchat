@@ -1,0 +1,124 @@
+---
+description: REST controllers must return DTO directly instead of ResponseEntity for standard JSON APIs
+globs:
+  - "backend/**/*.java"
+alwaysApply: true
+---
+
+# Java REST rule: do not use ResponseEntity for standard JSON responses
+
+## Goal
+For standard REST JSON APIs, controller methods must return DTOs directly, not `ResponseEntity<T>`.
+
+## Mandatory rules
+
+1. Do not use `ResponseEntity<T>` in REST controllers for normal success responses.
+2. Controller methods must return:
+   - a response DTO
+   - a list of DTO
+   - a page/wrapper DTO
+   - `void` for `204 No Content`
+3. HTTP status codes must be defined through Spring annotations:
+   - `@ResponseStatus(HttpStatus.OK)`
+   - `@ResponseStatus(HttpStatus.CREATED)`
+   - `@ResponseStatus(HttpStatus.NO_CONTENT)`
+   - and other explicit statuses when needed
+4. Default JSON response style:
+   - input: request DTO
+   - output: response DTO
+5. Do not wrap DTO into `ResponseEntity.ok(...)`, `ResponseEntity.status(...)`, or similar for standard CRUD REST endpoints.
+
+## Allowed exceptions
+
+`ResponseEntity` is allowed only when it is really necessary:
+- custom HTTP headers must be set
+- file download
+- streaming response
+- redirect response
+- custom content type / content disposition
+- conditional responses where headers/status are built dynamically
+- low-level infrastructure endpoints where direct HTTP control is required
+
+If none of these applies, return DTO directly.
+
+## Good examples
+
+### GET
+```java
+@GetMapping("/{id}")
+@ResponseStatus(HttpStatus.OK)
+public WorkspaceMemberResponse getMember(@PathVariable UUID id) {
+  return workspaceMemberService.getMember(id);
+}
+```
+
+### POST
+```java
+@PostMapping("/{workspaceId}/members/{memberId}/roles")
+@ResponseStatus(HttpStatus.CREATED)
+public WorkspaceMemberResponse assignRole(
+    @PathVariable UUID workspaceId,
+    @PathVariable UUID memberId,
+    @RequestBody AssignRoleRequest request
+) {
+  return workspaceMemberService.assignRole(workspaceId, memberId, request);
+}
+```
+
+### DELETE
+```java
+@DeleteMapping("/{id}")
+@ResponseStatus(HttpStatus.NO_CONTENT)
+public void deleteMember(@PathVariable UUID id) {
+  workspaceMemberService.delete(id);
+}
+```
+
+## Bad examples
+
+```java
+public ResponseEntity<WorkspaceMemberResponse> assignRole(...) {
+  return ResponseEntity.ok(service.assignRole(...));
+}
+```
+
+```java
+public ResponseEntity<Void> delete(...) {
+  service.delete(...);
+  return ResponseEntity.noContent().build();
+}
+```
+
+## Error handling rule
+
+Error responses must also use DTO-based style.
+Use:
+- `@RestControllerAdvice`
+- `@ExceptionHandler`
+- error response DTO
+- `@ResponseStatus(...)`
+
+Example:
+
+```java
+@RestControllerAdvice
+public class ApiExceptionHandler {
+
+  @ExceptionHandler(WorkspaceNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ErrorResponse handleWorkspaceNotFound(WorkspaceNotFoundException ex) {
+    return new ErrorResponse("WORKSPACE_NOT_FOUND", ex.getMessage());
+  }
+}
+```
+
+## Architectural intent
+
+Controllers are transport entry points, not HTTP response builders.
+Keep them simple and explicit:
+- receive request DTO
+- call service
+- return response DTO
+- declare status via annotation
+
+This makes the code cleaner, shorter, and more consistent.

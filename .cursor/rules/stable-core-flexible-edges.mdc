@@ -1,0 +1,63 @@
+---
+description: Stable core, flexible edges, ports and adapters architecture rule
+alwaysApply: true
+---
+
+# Stable core / flexible edges rule
+
+Проектируй и изменяй систему по принципу:
+
+стабильное рабочее ядро внутри, изменяемая и расширяемая обвязка снаружи.
+
+## Что считается ядром
+
+В ядре должны жить:
+- бизнес-инварианты;
+- доменные сущности и value objects;
+- ключевые use cases / application services / orchestration rules;
+- правила переходов состояний;
+- правила валидации;
+- бизнес-семантика операций;
+- логика, определяющая поведение продукта независимо от UI, DB, broker, external API или framework.
+
+## Что считается обвязкой
+
+Во внешних слоях должны жить:
+- REST / controllers / handlers;
+- messaging adapters;
+- database repositories / ORM details;
+- external API clients;
+- file systems / caches / queue transport specifics;
+- framework-specific wiring;
+- serialization / DTO mapping / protocol details;
+- UI-specific representation;
+- vendor-specific integration logic.
+
+## Обязательные архитектурные правила
+
+1. Зависимости должны идти снаружи внутрь.  
+Core не должен зависеть от UI, transport, framework glue, конкретной DB, конкретного broker, конкретного vendor API.
+
+2. Ядро не должно знать лишнего о внешнем мире.  
+Не загрязняй core HTTP, JSON, SQL/JPA, AMQP headers, vendor response shapes, UI formatting details.
+
+3. Новое поведение сначала пытайся выразить через ядро.  
+Если меняется только способ доставки / интеграции / отображения — не трогай core без необходимости.
+
+4. Расширение лучше модификации ядра.  
+Prefer new adapter / strategy / policy implementation / port implementation / mapper on boundary over unnecessary core reshaping.
+
+5. Ядро должно быть минимальным, но полным.  
+Не тащи в core инфраструктурный мусор. Но и не выноси из core реальные бизнес-правила.
+
+6. Обвязка должна быть заменяемой.  
+Смена transport, DB, API provider или UI не должна требовать переписывать core.
+
+7. Vendor lock-in должен оставаться на границе.  
+Vendor-specific details должны быть локализованы на внешней границе.
+
+8. Use case важнее framework flow.  
+Сначала проектируй бизнес-команду, orchestration, invariants, result, errors. Только потом transport/framework wiring.
+
+9. Ядро должно быть тестируемо отдельно.  
+Business rules должны тестироваться без поднятия пол-мира.

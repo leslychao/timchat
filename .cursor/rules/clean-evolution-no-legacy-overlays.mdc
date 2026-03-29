@@ -1,0 +1,68 @@
+---
+alwaysApply: true
+---
+
+# Clean evolution, no legacy overlays
+
+When implementing any non-trivial change, do not stack new logic on top of outdated logic just to preserve the old structure.
+
+Goal:
+the codebase must evolve cleanly.
+New functionality must not create architectural growths, overlapping flows, parallel truth, or legacy layers that stay only because they were already there.
+
+Principles:
+
+- Do not add a new layer, wrapper, flag branch, duplicate handler, alternative flow, compatibility path, or special-case patch if the underlying model is no longer correct.
+- If the new feature changes the meaning, lifecycle, ownership, or invariants of an existing part of the system, refactor the affected core design in that bounded area instead of adding a surface workaround.
+- Prefer one clean explicit flow over multiple partially overlapping flows.
+- Prefer replacing obsolete structure over preserving it out of fear.
+- Prefer deletion of outdated code over indefinite coexistence.
+- Do not keep dead branches, obsolete DTOs, duplicate services, old validation paths, legacy mappers, or shadow state after the new design is introduced.
+- Do not preserve old architecture only for historical reasons.
+
+Mandatory decision before coding:
+
+For each serious change, first determine which of the two cases is true:
+
+1. Extension case:
+   the existing core model is still correct, and the new requirement is a true extension.
+   Then extend through the existing boundaries in the simplest clean way.
+
+2. Core-change case:
+   the new requirement changes the actual domain model, state model, ownership, lifecycle, or main processing flow.
+   Then update the affected core design and remove or migrate the outdated structure instead of layering on top of it.
+
+Implementation rules:
+
+- If the change affects core domain meaning, state transitions, ownership of truth, or the main system flow, do not implement it as a patch around the old core.
+- Refactor the touched bounded context until the result is coherent and readable as one design.
+- Delete or migrate outdated code in the touched area in the same task when it is safe and justified.
+- Keep the blast radius controlled, but do not artificially protect obsolete local design.
+- Do not introduce speculative abstractions, generic engines, or framework-heavy redesign just to "clean things up".
+- Clean evolution means correct simplification, not a vanity rewrite.
+
+Required review output before implementation:
+
+For serious changes, explicitly state:
+- what is changing in the domain or flow
+- whether this is an extension case or a core-change case
+- which old parts become obsolete
+- what should be deleted, merged, or rewritten
+- why a patch-on-top approach would create legacy growth
+
+Required final result:
+
+After implementation, the touched area must have:
+- one clear source of truth
+- one clear ownership model
+- one clear flow for the changed behavior
+- no duplicate competing paths for the same business outcome
+- no obsolete code left behind without justification
+
+Required summary after implementation:
+
+Always summarize:
+- what was changed in the design
+- what old structure was removed or merged
+- what was intentionally not preserved
+- why the resulting design is cleaner than a layered patch

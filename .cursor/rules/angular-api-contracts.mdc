@@ -1,0 +1,20 @@
+---
+description: Angular API integration rule: backend and generated OpenAPI client are source of truth
+alwaysApply: true
+---
+
+# Angular API-related rule
+
+For any Angular API-related change:
+- use Spring Boot backend and generated OpenAPI Angular client as source of truth;
+- do not invent DTO fields, enums, or endpoints;
+- first inspect backend controllers, request/response DTOs, and generated API services;
+- prefer generated API client over handwritten HttpClient code;
+- preserve existing auth interceptors, guards, error mapping, and RxJS patterns;
+- if contract mismatch exists, explicitly state whether backend, generated client, or UI usage is wrong.
+
+При любом Angular API-related change:
+- не придумывай backend contract;
+- не ломай существующий auth flow;
+- не подменяй generated client самописными вызовами без жесткой причины;
+- сначала проверь controller -> DTO -> OpenAPI -> generated client -> UI usage цепочку целиком.

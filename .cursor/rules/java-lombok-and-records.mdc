@@ -1,0 +1,205 @@
+---
+alwaysApply: true
+---
+
+# Java, Lombok, constructors, records, and domain entities policy
+
+Use Spring with constructor injection by default.
+
+## Spring-managed classes
+
+For Spring-managed classes, prefer:
+- final dependencies
+- constructor injection
+- Lombok `@RequiredArgsConstructor` where applicable
+
+Do not use:
+- field injection
+- setter injection unless there is a real framework reason
+- hidden mutable dependencies
+
+## Lombok general policy
+
+Lombok is allowed only to reduce boilerplate, not to hide design.
+
+Allowed where appropriate:
+- `@Getter`
+- `@Setter`
+- `@RequiredArgsConstructor`
+- `@AllArgsConstructor` where justified
+- `@NoArgsConstructor` only where framework or persistence really requires it
+- `@Builder` where it clearly improves readability
+- `@EqualsAndHashCode` only when deliberately designed
+- `@ToString` only when safe
+
+Do not use Lombok to hide or replace explicit visibility design.
+
+Access modifiers must be written explicitly:
+- `public`
+- `protected`
+- `private`
+
+Package-private is allowed only by deliberate omission.
+
+Do not use Lombok `AccessLevel` shortcuts as a substitute for explicit visibility design.
+
+## Records vs classes
+
+Prefer Java `record` where the type is:
+- immutable
+- a pure data carrier
+- without lifecycle
+- without framework proxy requirements
+- without JPA entity semantics
+
+Typical good candidates for records:
+- REST request DTOs
+- REST response DTOs
+- query/read models
+- command/result DTOs
+- small immutable transport models
+- value objects where records fit naturally
+
+Use regular Java classes where the type has:
+- identity
+- lifecycle
+- mutable state
+- behavior or invariants
+- JPA or entity requirements
+- framework proxy requirements
+- non-trivial construction rules
+
+Typical required class candidates:
+- domain entities
+- aggregates
+- JPA entities
+- mutable state holders
+- framework-managed persistence models
+
+## Domain entities
+
+Domain entities must be regular Java classes, not records.
+
+Reason:
+- entities have identity
+- entities have lifecycle
+- entities enforce invariants
+- entities may change state through explicit domain methods
+- entities may require controlled reconstruction from persistence
+
+Do not use `record` for domain entities.
+
+## Lombok on domain entities
+
+For domain entities, Lombok is allowed only as a boilerplate reduction tool.
+
+Preferred default:
+- use `@Getter`
+- keep constructors explicit
+- keep domain methods explicit
+- keep invariants explicit
+
+Allowed only with care:
+- `@Setter` only selectively, only for fields that are truly allowed to change directly
+- `@Builder` only where it clearly improves readability and does not weaken invariants
+- `@ToString` only if safe
+- `@EqualsAndHashCode` only with deliberate identity semantics
+
+Do not use `@Data` on domain entities.
+
+Reason:
+`@Data` generates too much implicit behavior:
+- getters
+- setters
+- equals
+- hashCode
+- toString
+- constructor-related behavior in some cases
+
+For entities this is too broad and usually unsafe because it can weaken:
+- identity semantics
+- lifecycle modeling
+- invariant protection
+- object graph safety
+
+## Entity construction
+
+Domain entity construction must remain explicit.
+
+Use explicit constructors or static factory methods when the entity has:
+- invariant validation
+- default timestamps
+- derived fields
+- controlled creation rules
+- separate semantics for new object creation and persistence reconstruction
+
+Do not use Lombok-generated constructors as the primary construction mechanism for domain entities when the entity has invariants, lifecycle semantics, defaults, or reconstruction semantics.
+
+Typical correct pattern:
+- constructor or factory for creating a new entity
+- separate constructor or factory for restoring from persistence
+
+Do not replace meaningful entity constructors with trivial generated constructors.
+
+## Entity mutability
+
+Do not expose public setters for all entity fields by default.
+
+Prefer:
+- explicit domain methods for business state changes
+- selective setters only for truly simple technical mutability
+- controlled updates that preserve invariants
+
+Bad pattern:
+- entity as an anemic mutable bag with unrestricted setters
+
+Good pattern:
+- entity exposes only state changes that are valid in the domain
+
+## Builder usage
+
+Use `@Builder` only where it really improves readability:
+- many optional fields
+- test fixtures
+- complex DTO construction
+- carefully chosen reconstruction helpers
+
+Do not use builders everywhere by default.
+
+For domain entities:
+- `@Builder` is not the default choice
+- do not use it if it bypasses invariants
+- do not use it as a replacement for meaningful constructors
+- do not make invalid entity creation easier
+
+## Equality
+
+Be careful with `@EqualsAndHashCode`:
+- do not apply it blindly to JPA entities
+- do not implement it in a way that breaks entity identity semantics
+- prefer deliberate equality design
+
+## ToString
+
+Be careful with `@ToString`:
+- do not leak secrets
+- do not print huge graphs
+- do not accidentally traverse lazy relations
+
+## API and boundaries
+
+Prefer records for API-layer DTOs and read-only boundary models where practical.
+
+Do not expose persistence entities directly through API.
+
+## Decision summary
+
+- Spring-managed classes: prefer constructor injection and `@RequiredArgsConstructor`
+- DTOs and boundary models: prefer `record` where suitable
+- Domain entities: use regular classes
+- Domain entities: prefer `@Getter`
+- Domain entities: do not use `@Data`
+- Domain entities: use `@Setter` only selectively
+- Domain entities: use `@Builder` only selectively
+- Domain entities: keep constructors explicit
+- Domain entities: keep invariants explicit

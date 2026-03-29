@@ -1,0 +1,108 @@
+---
+alwaysApply: true
+---
+
+# REST localization and i18n policy
+
+All user-facing messages returned through REST must use Java localization and Spring i18n.
+
+At the current stage, the application must support exactly two locales:
+- Russian (`ru`)
+- English (`en`)
+
+Localization must be implemented through Spring `MessageSource` and message bundles.
+
+Use Spring MessageSource-based localization for:
+- validation messages
+- business error messages
+- forbidden/access messages
+- state/conflict messages
+- operation result messages
+- warning messages
+- explanation summaries if they are returned as user-facing text
+- any other human-readable REST message
+
+Do not hardcode user-facing REST messages in:
+- controllers
+- application services
+- domain services
+- exception classes
+- validators
+- handlers
+- mappers
+- response builders
+
+Use:
+- message keys
+- message bundles
+- locale-aware message resolution through Spring i18n
+- locale from request context via `Accept-Language` or configured application default
+
+Supported locales for now:
+- `ru`
+- `en`
+
+Locale rules:
+- if request locale is `ru`, return Russian localized text
+- if request locale is `en`, return English localized text
+- if request locale is missing, unsupported, or cannot be resolved, use configured application default locale
+- do not implement additional locales unless explicitly required
+- do not scatter ad hoc locale handling across business code
+
+REST responses should prefer this structure where applicable:
+- stable machine-readable code
+- localized human-readable message
+- optional localized details
+- trace/correlation id when relevant
+
+Rules:
+- message text returned by REST must be localized through Spring i18n
+- keep business logic independent from raw localized text
+- business logic should operate on codes/reasons, not on rendered language strings
+- localized text should be resolved at the API boundary or dedicated response/error mapping layer
+- validation annotations must also use message keys, not hardcoded text
+- exception-to-response mapping must resolve localized messages through `MessageSource`
+- do not use localized text as program logic input
+- do not compare logic by rendered message text
+
+What should remain non-localized:
+- internal logs
+- metric names
+- technical identifiers
+- enum internal names
+- database values
+- provider/raw external payloads
+- internal exception class names
+
+Recommended practice:
+- every user-facing error should have a stable code and a separate i18n message key
+- every major REST error/response message should be covered by message bundle entries
+- message bundles must be organized consistently and not duplicated randomly
+- keep Russian and English translations semantically equivalent
+- if a new message key is added, both `ru` and `en` bundle entries must be added in the same change
+- avoid leaking raw provider messages directly to REST clients unless explicitly wrapped and localized
+
+Bundle conventions:
+- use consistent bundle structure, for example:
+  - `messages.properties` for default locale
+  - `messages_ru.properties` for Russian
+  - `messages_en.properties` for English
+- group keys by domain/feature, not randomly
+- prefer stable hierarchical keys, for example:
+  - `error.auth.forbidden`
+  - `error.workspace.not-found`
+  - `error.member.role-conflict`
+  - `validation.email.invalid`
+  - `operation.workspace.created`
+
+Implementation constraints:
+- business/domain layers must not construct localized sentences
+- exceptions should carry stable codes / message keys / arguments, not final rendered text
+- API error mapping layer is responsible for resolving final localized message
+- validation must use message keys in annotations
+- response DTOs may contain localized `message` and `details`, but logic must rely on stable `code`
+
+If a new REST endpoint returns human-readable text, it must use the i18n mechanism from the start.
+
+For the current scope, support only Russian and English cleanly and consistently.
+Do not introduce a broader multilingual architecture unless explicitly required.

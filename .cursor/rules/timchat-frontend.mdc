@@ -1,0 +1,98 @@
+---
+description: TimChat frontend architecture, feature structure, UI direction and layout
+globs:
+  - "**/*.ts"
+  - "**/*.html"
+  - "**/*.scss"
+  - "**/*.css"
+---
+
+# TimChat frontend
+
+## Architecture
+
+Frontend строится feature-oriented на Angular.
+
+```
+src/app
+  ├─ core
+  │   ├─ auth
+  │   ├─ api
+  │   ├─ realtime
+  │   ├─ routing
+  │   └─ layout
+  ├─ shared
+  │   ├─ ui
+  │   ├─ util
+  │   └─ models
+  ├─ features
+  │   ├─ auth
+  │   ├─ workspace
+  │   ├─ channels
+  │   ├─ chat
+  │   ├─ call
+  │   ├─ presence
+  │   ├─ profile
+  │   └─ settings
+  └─ app.routes.ts
+```
+
+## Key services / stores
+
+- `AuthStore` — auth state
+- `WorkspaceStore` — workspace context
+- `ChannelStore` — channels
+- `ChatStore` — chat messages
+- `PresenceStore` — live presence
+- `CallStore` — call state
+- `RealtimeGateway` — WebSocket connection management
+- `RtcMediaService` — WebRTC media
+- `DeviceService` — device management
+- `AttachmentUploadService` — file uploads
+
+## Frontend role
+
+Frontend orchestrates UX and media lifecycle, но не владеет authoritative business state.
+Авторитетное состояние определяется сервером.
+Frontend отображает то, что сервер объявил effective state.
+
+## UI direction
+
+Cursor-inspired design language:
+- light-theme-first
+- minimalistic
+- dense
+- professional
+- desktop-first
+- editor-like
+
+Цель — high-quality operational workspace:
+compact controls, clean typography, subtle borders, strong layout hierarchy, contextual side panels, low visual noise.
+
+Продукт должен выглядеть как серьёзный рабочий инструмент для ежедневной коммуникации, а не как декоративный dashboard или маркетинговый мессенджер.
+
+## Layout zones
+
+- **left navigation rail** — workspace switching
+- **secondary sidebar** — channels / sections / threads
+- **main central area** — chat timeline or active room content
+- **right contextual panel** — members, presence, moderation, audit, pinned items, call details
+- **compact top bar** — current context, search, quick actions
+
+## UX priorities
+
+- fast scanning
+- high information density
+- predictable interaction zones
+- keyboard-friendly workflows
+- low-noise state presentation
+- clear distinction between stable context and live-changing context
+
+## Anti-patterns
+
+Не делай:
+- oversized cards
+- excessive whitespace
+- decorative gradients
+- mobile-first dashboard composition
+- marketing-style decorative UI

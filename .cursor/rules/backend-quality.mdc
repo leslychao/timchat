@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+# Backend technology choices
+
+Java 21. Spring Boot 3.3.5. Maven multi-module.
+
+Use Liquibase for PostgreSQL schema changes (see database-conventions for format).
+
+Code style and quality rules are in clean-code-java-spring.
+Testing discipline is in correctness-tests-and-observability and testing-strategy.

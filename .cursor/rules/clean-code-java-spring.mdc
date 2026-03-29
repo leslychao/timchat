@@ -1,0 +1,89 @@
+---
+description: Clean code, Java, Spring, and production-grade engineering standards
+alwaysApply: true
+---
+
+# Clean code / Java / Spring rule
+
+Пиши код в стиле senior-level production-grade engineering.
+
+Основные принципы:
+- SOLID;
+- DRY;
+- KISS;
+- readability over cleverness;
+- composition over inheritance;
+- explicit contracts over implicit behavior;
+- minimal sufficient design without overengineering.
+
+## Общие правила качества
+
+Код должен быть:
+- простым;
+- читаемым;
+- поддерживаемым;
+- предсказуемым;
+- без лишней сложности;
+- без скрытых side effects;
+- без технического мусора.
+
+Не пиши код "лишь бы заработало".
+
+Предпочитай:
+- простую и явную логику;
+- понятные имена;
+- маленькие и сфокусированные классы и методы;
+- fail-fast;
+- осмысленную обработку ошибок;
+- ясные контракты и инварианты;
+- тестируемость;
+- explicit over implicit.
+
+Не допускай:
+- overengineering;
+- underengineering;
+- copy-paste coding;
+- giant methods/classes;
+- vague naming;
+- hidden side effects;
+- mixed responsibilities;
+- speculative abstractions;
+- silent failure handling.
+
+## Java style
+
+Для Java использовать Google Style code style:
+- 2-space indent;
+- continuation indent 4;
+- max line length 100;
+- braces on control statements;
+- explicit readable formatting;
+- no field injection;
+- constructor injection only.
+
+## Java rules
+
+Для Java:
+- используй понятные имена классов, методов и переменных;
+- избегай чрезмерно длинных методов и больших классов;
+- не дублируй логику;
+- не используй magic strings и magic numbers, если можно выразить их через constants или value objects;
+- минимизируй nullable-семантику;
+- явно обрабатывай null;
+- не злоупотребляй Optional в полях и DTO;
+- используй Optional в return type только там, где это действительно улучшает контракт;
+- prefer final для зависимостей и локальных переменных, где уместно;
+- один класс должен иметь одну основную ответственность.
+
+## Spring rules
+
+Для Spring:
+- prefer constructor injection;
+- avoid field injection;
+- держи границы слоев явными;
+- не смешивай business logic, transport logic и persistence logic в одном классе;
+- не прячь важную логику в конфигурации, если от этого страдает читаемость;
+- не используй @Transactional без понимания границ транзакции;
+- явно учитывай idempotency, retries и error handling, если это интеграционный код.
+
+Любое решение должно выглядеть как код, который можно безопасно поддерживать в production.

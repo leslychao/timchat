@@ -1,0 +1,98 @@
+---
+description: TimChat domain model, backend module structure, internal layering rules
+alwaysApply: true
+---
+
+# TimChat domain model and modules
+
+## Domain entities
+
+### Identity and collaboration
+
+- `User`, `UserProfile`
+- `Workspace`, `WorkspaceMember`
+- `Role`, `PermissionGrant`, `MemberRole`
+- `Channel`, `ChannelPermissionOverride`
+- `Invite`
+- `AttachmentMetadata`
+
+### Chat
+
+- `Message`, `MessageAttachment`, `MessageRevision`, `MessageDeletion`
+
+### Call-control
+
+- `CallSession`, `CallParticipant`, `ParticipantDevice`
+- `ParticipantSelfState`, `ParticipantEffectiveState`
+- `ModerationAction`, `CallJoinTicket`, `ReconnectToken`
+
+### Realtime operational
+
+- `WebSocketConnection`, `ClientSession`
+- `PresenceSnapshot`, `ChannelRealtimeSubscription`, `LiveCallSnapshot`
+
+### Audit
+
+- `AuditEvent`, `AuditActor`, `AuditTarget`, `AuditPayload`
+
+## Backend module structure
+
+Root package: `ru.timchat`
+
+```
+ru.timchat
+  ├─ TimChatApplication
+  ├─ auth          — JWT / OIDC, current user context, handshake auth
+  ├─ user          — user profile management
+  ├─ workspace     — workspace lifecycle, members, invites
+  ├─ permission    — roles, grants, resolution, channel overrides, call policy
+  ├─ channel       — channel model, text/voice/video rules, ordering
+  ├─ message       — send/edit/delete, history, realtime publication
+  ├─ attachment    — metadata, upload/download auth, signed URLs
+  ├─ presence      — online/offline/idle/dnd, live projection
+  ├─ realtime      — WebSocket transport, protocol, dispatch, handlers, registry
+  ├─ call          — call lifecycle, participant lifecycle, self/effective state, snapshots
+  ├─ media         — TURN credentials, SFU adapter, media policy
+  ├─ moderation    — mute/kick/block actions, enforcement state
+  ├─ audit         — durable audit records
+  ├─ common        — errors, ids, shared contracts
+  └─ infra         — PostgreSQL config, Redis config, storage clients, observability
+```
+
+## Internal layering per module
+
+Каждый бизнес-модуль внутри должен следовать структуре:
+
+```
+<module>
+  ├─ api           — REST DTOs / controllers
+  ├─ application   — use cases / orchestration / command services
+  ├─ domain        — core model, invariants, repository interfaces
+  ├─ infra         — JPA / Redis / storage / SFU implementations
+  └─ mapper        — model translations where needed
+```
+
+Realtime module имеет свою специфику:
+
+```
+realtime
+  ├─ ws            — WebSocket transport layer
+  ├─ protocol      — envelope parsing, serialization
+  ├─ dispatch      — routing incoming messages to handlers
+  ├─ handler       — typed handlers per domain scope
+  ├─ registry      — connection / session registry
+  └─ security      — per-command auth
+```
+
+## Правила
+
+- Не создавай модули за пределами этого списка без явного обоснования.
+- Не нарушай layering: `api` не лезет в `infra`, `domain` не зависит от `api` или `infra`.
+- Не складывай всю логику в один модуль.
+- Один модуль = одна bounded area ответственности.
+- Use case в application-слое должен читаться как сценарий:
+  1. validate auth / permission
+  2. update durable state
+  3. update transient projection
+  4. emit outbound realtime event
+  5. write audit if needed

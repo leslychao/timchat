@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+---
+
+# Edge authentication via oauth2-proxy
+
+use oauth2-proxy as the edge authentication gateway / reverse proxy.
+
+Use it for:
+- OIDC/OAuth2 login flow
+- session/cookie handling
+- protecting public entrypoints
+- forwarding authenticated identity headers to internal services
+
+Do not treat oauth2-proxy as:
+- a business logic layer
+- the owner of RBAC
+- the owner of workspace/account authorization
+- a replacement for backend authorization
+- a place for domain permission rules
+
+Backend remains responsible for:
+- application-level authorization
+- RBAC
+- workspace/account scoped access control
+- business permission checks
+
+All externally exposed HTTP entrypoints must go through oauth2-proxy.
+Internal services should not be exposed directly to the public network.

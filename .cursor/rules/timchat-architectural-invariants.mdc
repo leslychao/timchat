@@ -1,0 +1,63 @@
+---
+description: TimChat non-negotiable architectural invariants and anti-patterns
+alwaysApply: true
+---
+
+# TimChat architectural invariants
+
+## Non-negotiable invariants
+
+Эти инварианты нельзя нарушать ни при каких обстоятельствах.
+
+1. Backend не передаёт media (RTP). Backend = control plane only.
+2. SFU не является источником business truth.
+3. PostgreSQL — durable truth.
+4. Redis — transient truth only.
+5. Клиент не пишет authoritative state. Клиент request, сервер decide.
+6. Каждая команда (REST и WS) авторизуется на сервере. Handshake auth недостаточен.
+7. Reconnect восстанавливает состояние через authoritative snapshot, не через replay.
+8. Chat и call-control — отдельные домены. Не мешай их в одну модель.
+9. Бинарные данные живут в object storage, не в PostgreSQL.
+10. `CallSession` и media transport — разные сущности.
+11. В MVP один канал имеет максимум одну активную call session.
+12. Effective participant state вычисляет сервер из self-state + server constraints + moderation.
+
+## Что не нужно делать сейчас
+
+- не дробить систему в microservices
+- не добавлять STOMP
+- не делать replay-based reconnect
+- не тащить E2EE в MVP
+- не строить generalized event platform "на будущее"
+- не оптимизировать bottlenecks без метрик
+- не делать generic plugin system для room types
+
+## Что было бы overengineering
+
+- отдельные сервисы для chat / call / presence / moderation
+- universal DTO/entity/event model на все слои
+- complex CQRS для MVP
+- binary protocol replacement
+- generic plugin framework
+- replay event journal для reconnect
+- backend как partial media relay
+
+## Anti-patterns
+
+Не делай одним объектом одновременно DB entity, REST DTO, WS payload, Redis projection и frontend state.
+
+Не размазывай permission decisions по controllers, websocket handlers и helper classes.
+Permission и moderation resolution — централизованные service / resolver слои.
+
+## Триггеры для пересмотра архитектуры
+
+Пересмотр нужен только при реальных сигналах:
+
+- подтверждён кейс с несколькими simultaneous calls в одном channel
+- подтверждённая потребность в recording или transcription
+- подтверждённая потребность в E2EE rooms
+- reconnect storms вызывают operational pain
+- Redis pub/sub стал измеримым bottleneck
+- history queries стали database problem
+- новые SLA/SLO требуют другого уровня resilience / latency
+- монолит уперся в границы масштабирования

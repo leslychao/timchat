@@ -1,0 +1,74 @@
+---
+description: TimChat product scope, MVP boundaries, business invariants and confirmed permissions
+alwaysApply: true
+---
+
+# TimChat product scope
+
+TimChat — командный realtime-продукт для общения и совместной работы внутри рабочих пространств.
+
+Root package: `ru.timchat`.
+
+## Подтверждённый MVP scope
+
+MVP включает ровно эти блоки:
+
+- workspaces / channels
+- chat (send, receive realtime, history, edit, delete)
+- attachments (metadata + controlled object storage)
+- presence (online / offline / idle / dnd)
+- calls / room-control (join, leave, self-state, room snapshots)
+- moderation (mute, kick, block capabilities)
+- permissions / roles
+- reconnect (snapshot-based only)
+- audit (moderation actions, significant room events, access changes)
+
+Auth: OAuth2/OIDC + JWT.
+File storage: S3-compatible object storage.
+NAT traversal: STUN/TURN.
+
+## Бизнес-инварианты
+
+1. Один active call на один voice/video channel в MVP.
+2. Reconnect не создаёт новую call session — это продолжение существующей.
+3. Клиент не является источником authoritative state. Клиент просит, сервер решает.
+4. Effective participant state (mute, video, screen share) вычисляется сервером из self-state + server constraints + moderation.
+5. Права проверяются на уровне действий, а не только на входе в продукт.
+
+## Подтверждённые permission types
+
+- `CHANNEL_VIEW`
+- `MESSAGE_WRITE`
+- `MESSAGE_DELETE_OWN`
+- `MESSAGE_DELETE_ANY`
+- `ROOM_JOIN`
+- `ROOM_SPEAK`
+- `ROOM_VIDEO`
+- `ROOM_SCREEN_SHARE`
+- `ROOM_MODERATE`
+- `ROOM_FORCE_MUTE`
+- `ROOM_KICK`
+- `ROOM_MOVE`
+
+## Что явно НЕ входит в текущий scope
+
+Не реализуй, не проектируй и не предлагай без явного запроса:
+
+- E2EE
+- breakout rooms
+- несколько параллельных call sessions в одном channel
+- replay-based reconnect recovery
+- server-side recording / transcription
+- отдельный signaling service
+- microservices split
+- STOMP
+- generic plugin system для room types
+- binary protocol вместо JSON
+- сложная CQRS / read-model архитектура
+
+## Приоритет реализации
+
+1. workspaces, channels, roles/permissions baseline, chat baseline, attachment baseline
+2. presence, realtime delivery, reconnect baseline
+3. calls / room-control, self-state, moderation for live rooms
+4. audit hardening, reliability hardening, permission/moderation completeness

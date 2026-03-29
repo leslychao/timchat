@@ -1,0 +1,57 @@
+---
+alwaysApply: true
+---
+
+# runtime modes
+
+use two distinct runtime modes.
+
+## Local development mode
+
+Local development must use:
+- frontend on host via Angular dev server (`ng serve`)
+- backend on host via Spring Boot
+- infrastructure only in Docker Compose under `/infra`
+
+Rules:
+- do not require frontend container for local development
+- do not require backend container for local development
+- infra dependencies must be runnable from `/infra`
+- frontend and backend access infra through localhost port mappings in local mode
+
+## Containerized deploy mode
+
+For production-like deployment:
+- frontend is packaged as a Docker image
+- frontend is served by Nginx
+- backend is packaged as a Docker image
+- backend runs as a container/service
+- infrastructure uses Docker networking
+- nginx and backend must be wired correctly
+- backend must be able to reach required infra services over Docker network
+
+## Network rule
+
+In local mode:
+- host-run apps do not need Docker network membership
+- use localhost-mapped ports
+
+In containerized mode:
+- containers communicate through Docker networks
+- keep internal services internal unless explicit public exposure is required
+
+## Do not propose
+
+Do not propose:
+- forcing local frontend/backend into Docker
+- Kubernetes
+- Helm
+- Terraform
+- Nomad
+- Swarm
+- platform overengineering
+
+## Frontend stack implication
+
+Because local frontend runs with `ng serve`, frontend stack must be Angular.
+Do not generate React/Vite setup for this project unless the user explicitly changes this decision.

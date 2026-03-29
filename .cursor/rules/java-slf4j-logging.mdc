@@ -1,0 +1,16 @@
+---
+alwaysApply: true
+---
+
+# Java logging policy: use SLF4J via Lombok
+
+Use SLF4J logging through Lombok `@Slf4j`.
+
+## Required rule
+
+For application logging, use Lombok:
+
+```java
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j

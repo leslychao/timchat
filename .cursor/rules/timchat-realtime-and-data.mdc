@@ -1,0 +1,107 @@
+---
+description: TimChat WebSocket protocol, REST vs WS split, PostgreSQL vs Redis boundaries, performance guardrails
+alwaysApply: true
+---
+
+# TimChat realtime protocol and data boundaries
+
+## WebSocket protocol
+
+TimChat использует raw WebSocket с собственным строгим application protocol.
+
+### Required envelope
+
+Каждое WS-сообщение должно соответствовать формату:
+
+```json
+{
+  "protocolVersion": 1,
+  "messageId": "uuid",
+  "correlationId": "uuid-or-client-id",
+  "type": "join_call",
+  "scope": "call",
+  "sentAt": "2026-03-28T12:00:00Z",
+  "clientSessionId": "uuid",
+  "payload": {}
+}
+```
+
+Обязательные поля: `protocolVersion`, `messageId`, `correlationId`, `type`, `scope`, `clientSessionId`, `payload`.
+
+### Protocol scopes
+
+- `system`
+- `workspace`
+- `channel`
+- `chat`
+- `presence`
+- `call`
+- `moderation`
+- `media`
+
+### Typed handlers
+
+Не делай giant WebSocket handler. Реализуй:
+
+- thin WebSocket entrypoint
+- protocol parser
+- dispatcher
+- typed handlers по доменам: `SystemCommandHandler`, `ChatCommandHandler`, `PresenceCommandHandler`, `CallCommandHandler`, `ModerationCommandHandler`
+
+Handlers не содержат бизнес-логику — только парсинг, валидация формы и маршрутизация. Бизнес-логика живёт в application services.
+
+### Client-server contract
+
+Команда клиента — это request, не truth.
+Клиент говорит: "я хочу X".
+Сервер отвечает: "разрешено/запрещено" + effective state + snapshot.
+
+## REST vs WebSocket split
+
+### REST отвечает за
+
+- auth / profile / workspace / channel CRUD
+- history loading
+- attachment metadata flows
+- stable resource-oriented operations
+- administrative endpoints
+
+### WebSocket отвечает за
+
+- realtime message delivery
+- live presence
+- call control
+- moderation notifications
+- reconnect / snapshot synchronization
+
+Не смешивай: CRUD-операции идут через REST, live events — через WS.
+
+## Data storage boundaries
+
+### PostgreSQL — durable truth
+
+PostgreSQL хранит весь долговечный бизнес-state:
+users, profiles, workspaces, memberships, roles, permissions, channels, messages, attachment metadata, call session metadata, participant history, moderation actions, audit events.
+
+### Redis — transient truth only
+
+Redis хранит только live/transient state:
+online/offline presence, connection registry, active room participant projections, self-state/effective-state live projections, dedupe keys, reconnect/session lookup, cross-node fanout/pub-sub.
+
+### Recovery rule
+
+Если Redis потерян:
+- durable business state остаётся корректным
+- live state может временно деградировать
+- reconnect + snapshot rebuild должны восстановить operational state
+
+Не делай Redis источником бизнес-истины. Не делай SFU источником бизнес-истины.
+
+## Performance guardrails
+
+1. Backend не передаёт media: media path = client ↔ SFU ↔ STUN/TURN.
+2. File upload/download: по возможности direct storage flows, backend выдаёт metadata / authorization / signed URLs.
+3. Presence heartbeat не пишет в PostgreSQL — presence живёт в Redis, fanout только по meaningful state change.
+4. Fanout: один room-wide payload, переиспользовать serialized event, персонализировать только при реальной необходимости.
+5. Snapshot restore должен оставаться дешёвым: Redis = live projections, PostgreSQL = durable + fallback, не допускать N+1.
+6. History queries: keyset pagination, корректные индексы, batch loading, без deep offset pagination.

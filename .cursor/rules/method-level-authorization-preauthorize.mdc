@@ -1,0 +1,35 @@
+---
+alwaysApply: true
+---
+
+# Method-level authorization with PreAuthorize
+
+Use @PreAuthorize for application/API-level permission checks.
+
+Allowed usage:
+- REST controllers
+- application services
+- command handlers
+- sensitive query services
+
+Use @PreAuthorize for:
+- role/authority checks
+- workspace-scoped access checks
+- marketplace-account-scoped access checks
+- manual approval / execution / credential / policy management permissions
+
+Do not use @PreAuthorize:
+- in domain layer
+- in entities
+- in repositories as the main authorization mechanism
+- for complex business logic
+- with long unreadable SpEL expressions
+
+Prefer:
+- simple hasAuthority / hasRole checks
+- short calls to a dedicated authorization service bean
+- explicit permission names
+- business invariants enforced separately inside the use case
+
+Method security does not replace HttpSecurity rules.
+Unannotated methods are not automatically protected.

@@ -1,0 +1,69 @@
+---
+description: TimChat test strategy — what and how to test
+globs:
+  - "**/*Test*.java"
+  - "**/*Spec*.ts"
+  - "**/test/**"
+  - "**/tests/**"
+---
+
+# TimChat test strategy
+
+## Domain tests
+
+Обязательно покрывать:
+
+- call session lifecycle (create, join, leave, close)
+- permission decisions (allow/deny for each permission type)
+- moderation constraints (mute, kick, block capabilities)
+- effective state computation (self-state + server constraints + moderation → effective)
+- reconnect eligibility
+- valid / invalid state transitions
+
+Domain tests должны работать без поднятия Spring context, базы, Redis.
+
+## Application / integration tests
+
+Обязательно покрыть use cases:
+
+- `join_call`
+- `leave_call`
+- `resume_session`
+- `send_message`
+- `delete_message`
+- `mute_participant`
+- `update_self_state`
+
+Для каждого проверять:
+
+- durable state (PostgreSQL)
+- live projection (Redis)
+- outbound event behavior
+- audit record (where required)
+
+## Behavioural reliability tests
+
+Обязательно покрыть:
+
+- duplicate `join_call`
+- duplicate `leave_call`
+- duplicate `send_message` with same idempotency key
+- repeated `resume_session`
+- reconnect after stale connection
+- reconnect after moderation change
+- snapshot consistency after concurrent operations
+
+## Cross-flow consistency tests
+
+Проверить согласованность между:
+
+- REST и WebSocket state views
+- call flow и moderation flow
+- permission changes и их immediate effect на текущую сессию
+
+## Правила
+
+- Каждый новый use case должен иметь как минимум happy path + permission denied + основной edge case.
+- Не пиши тесты ради coverage metric. Тестируй поведение и инварианты.
+- Domain тесты — unit. Integration тесты — с реальной базой и Redis (Testcontainers).
+- При изменении бизнес-правила сначала обнови / добавь тест, потом меняй логику.
