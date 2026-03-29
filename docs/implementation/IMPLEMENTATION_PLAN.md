@@ -164,7 +164,7 @@ S1 (Scaffolding) ──────► S2 (Common) ──► S3 (Auth) ──►
 
 | # | Stage Name | Status | Objective | Dependencies | Output / Deliverables | Commit Template |
 |---|-----------|--------|-----------|--------------|----------------------|-----------------|
-| 1 | Project Scaffolding | PLANNED | Создать скелет проекта: Maven, Spring Boot, Angular, Docker Compose | — | pom.xml, Spring Boot app, Angular project, docker-compose.yml, Liquibase config | `feat: scaffold project structure` |
+| 1 | Project Scaffolding | DONE | Создать скелет проекта: Maven, Spring Boot, Angular, Docker Compose | — | pom.xml, Spring Boot app, Angular project, docker-compose.yml, Liquibase config | `feat: scaffold project structure` |
 | 2 | Common Module & Error Handling | PLANNED | Базовые типы, global error handling, i18n | S1 | common package, exception handler, error DTO, message bundles | `feat: add common module with error handling and i18n` |
 | 3 | Auth Module | PLANNED | Keycloak JWT auth, Spring Security, CurrentUserContext | S2 | auth module, security config, Keycloak in docker-compose, CurrentUserContext | `feat: add auth module with Keycloak JWT validation` |
 | 4 | User & Workspace | PLANNED | User/profile, workspace CRUD, membership | S3 | entities, repos, services, REST controllers, migrations | `feat: add user and workspace modules` |

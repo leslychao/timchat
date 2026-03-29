@@ -13,51 +13,72 @@ Do not remove sections for stages that haven't been executed yet — keep them a
 
 | Field | Value |
 |-------|-------|
-| Date/Time | |
-| Status | PLANNED |
-| Executor | |
+| Date/Time | 2026-03-29T06:07+04:00 |
+| Status | DONE |
+| Executor | AI Agent |
 
 ### Changes Made
 
 _List of files created/modified:_
 
-- 
+- `pom.xml` — root Maven parent (Java 17, Spring Boot 3.3.5, modules: backend)
+- `backend/pom.xml` — backend module with all required dependencies
+- `backend/src/main/java/ru/timchat/TimChatApplication.java` — @SpringBootApplication
+- `backend/src/main/java/ru/timchat/infra/config/SecurityConfig.java` — permit-all security config
+- `backend/src/main/resources/application.yml` — datasource, redis, liquibase config
+- `backend/src/main/resources/db/changelog/db.changelog-master.yaml` — empty changelog
+- `backend/src/test/java/ru/timchat/TimChatApplicationTest.java` — smoke test
+- `backend/src/test/resources/application-test.yml` — H2 + no Redis for tests
+- `infra/docker-compose.yml` — PostgreSQL 16, Redis 7, MinIO with health checks
+- `infra/.env.example` — default credentials
+- `frontend/` — Angular 18 project (standalone components, SCSS, routing)
+- `frontend/src/app/app.component.ts` — cleaned boilerplate
+- `.gitignore` — updated for Java, Node, Angular, IDE
+- `.mvn/wrapper/` — Maven Wrapper (3.9.9)
+- `mvnw`, `mvnw.cmd` — Maven Wrapper scripts
 
 ### Risks Found
 
-- 
+- Node.js v21.7.3 is odd-numbered (not LTS), Angular 18 shows engine warnings. Functional but not ideal for production.
+- Java 21 not available on this machine — Java 17 used instead. Spring Boot 3.3.5 supports Java 17+, so no functional impact.
 
 ### Gaps Found
 
-- 
+- Java version downgraded from planned 21 to 17 due to local environment. Plan originally specified Java 21.
+- Angular CLI version: using 18 instead of latest due to Node 21 incompatibility with Angular 21.
 
 ### Fixes Applied
 
 _Fixes beyond original stage scope:_
 
-- 
+- Added `SecurityConfig` with permit-all to prevent Spring Security from blocking all requests by default
+- Added `application-test.yml` with H2 and disabled Redis/Liquibase for test profile
+- Added H2 test dependency in `backend/pom.xml`
+- Added Maven Wrapper (`mvnw`/`mvnw.cmd`) since Maven was not installed on the system
+- Removed deprecated `hibernate.dialect` explicit config (auto-detected by Hibernate 6.5+)
 
 ### Tests Run
 
 | Test | Result |
 |------|--------|
-| mvn clean compile | |
-| ng build | |
-| docker-compose up | |
-| Spring Boot context loads | |
+| mvn clean compile | PASS — BUILD SUCCESS |
+| ng build | PASS — bundle generated |
+| docker-compose up | PASS — all 3 services healthy |
+| Spring Boot context loads | PASS — connected to PG, Redis, Liquibase ran |
+| TimChatApplicationTest (smoke) | PASS — 1 test, 0 failures |
 
 ### Result
 
-- [ ] All acceptance criteria met
+- [x] All acceptance criteria met
 - [ ] Committed
 
 ### Commit
 
 | Field | Value |
 |-------|-------|
-| Hash | |
-| Message | |
-| Pushed | |
+| Hash | pending |
+| Message | feat: scaffold project structure with Maven backend, Angular frontend, and Docker Compose infra |
+| Pushed | pending |
 
 ### Next Stage
 
@@ -66,6 +87,12 @@ Stage 2: Common Module & Error Handling
 ### Notes
 
 _Additional observations, decisions, or deviations:_
+
+- Java 17 used instead of 21 — environment constraint, no functional impact for Spring Boot 3.3.5
+- Angular 18 used instead of latest — Node 21.7.3 incompatibility with Angular 21
+- Maven Wrapper added since Maven was not pre-installed on the system
+- SecurityConfig added early to prevent Spring Security default deny-all behavior
+- H2 used for tests to avoid requiring live PostgreSQL for unit tests
 
 ---
 
