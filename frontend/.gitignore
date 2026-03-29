@@ -37,6 +37,9 @@ yarn-error.log
 testem.log
 /typings
 
+# OpenAPI generated client
+/src/app/core/api/generated
+
 # System files
 .DS_Store
 Thumbs.db

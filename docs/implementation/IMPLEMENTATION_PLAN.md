@@ -172,7 +172,7 @@ S1 (Scaffolding) ──────► S2 (Common) ──► S3 (Auth) ──►
 | 6 | Channels | DONE | Channel CRUD, type enforcement, visibility | S5 | channel module, REST, visibility enforcement, migrations | `feat: add channels module with CRUD, types, and visibility enforcement` |
 | 7 | Chat Backend | DONE | Send/edit/delete messages, history pagination | S6 | message module, REST, keyset pagination, migrations | `feat: add chat message module` |
 | 8 | Attachments Backend | DONE | Attachment metadata, S3 upload/download auth, signed URLs | S7 | attachment module, S3 adapter, REST, migrations | `feat: add attachments module` |
-| 9 | Frontend Foundation | PLANNED | Angular shell, layout, auth, OpenAPI client, routing | S8 | Angular project, layout shell, auth flow, API client | `feat: scaffold frontend with layout and auth` |
+| 9 | Frontend Foundation | DONE | Angular shell, layout, auth, OpenAPI client, routing | S8 | Angular project, layout shell, auth flow, API client | `feat: scaffold frontend with layout and auth` |
 | 10 | Frontend Workspace/Channels/Chat | PLANNED | Workspace selector, channel list, chat timeline, message compose | S9 | workspace/channel/chat feature modules, stores | `feat: add workspace, channels, and chat UI` |
 | 11 | WebSocket Realtime Foundation | PLANNED | WS transport, protocol, dispatcher, typed handlers, registry | S6 | realtime module, protocol model, dispatcher, registry | `feat: add WebSocket realtime foundation` |
 | 12 | Realtime Chat & Presence Backend | PLANNED | Chat fanout via WS, presence model, heartbeat | S11 | ChatCommandHandler, PresenceCommandHandler, Redis projections | `feat: add realtime chat delivery and presence` |

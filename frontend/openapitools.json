@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.4.0",
+    "generators": {
+      "timchat-api": {
+        "generatorName": "typescript-angular",
+        "inputSpec": "http://localhost:8080/v3/api-docs",
+        "output": "src/app/core/api/generated",
+        "additionalProperties": {
+          "ngVersion": "18.0.0",
+          "providedInRoot": "true",
+          "supportsES6": "true",
+          "withInterfaces": "true",
+          "useSingleRequestParameter": "false"
+        },
+        "globalProperty": {
+          "skipFormModel": "false"
+        }
+      }
+    }
+  }
+}
