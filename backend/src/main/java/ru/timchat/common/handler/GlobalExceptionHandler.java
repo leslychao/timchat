@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -65,6 +66,18 @@ public class GlobalExceptionHandler {
     log.warn("Validation error [traceId={}]: {}", traceId, details);
 
     return new ErrorResponse("VALIDATION_ERROR", message, details, traceId);
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ErrorResponse handleMessageNotReadable(
+      HttpMessageNotReadableException ex, Locale locale) {
+    String traceId = generateTraceId();
+    String message = resolveMessage("error.validation", locale);
+
+    log.warn("Bad request [traceId={}]: {}", traceId, ex.getMessage());
+
+    return new ErrorResponse("BAD_REQUEST", message, null, traceId);
   }
 
   @ExceptionHandler(Exception.class)

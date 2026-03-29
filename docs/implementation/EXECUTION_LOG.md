@@ -524,46 +524,88 @@ _Additional observations, decisions, and deviations:_
 
 | Field | Value |
 |-------|-------|
-| Date/Time | |
-| Status | PLANNED |
-| Executor | |
+| Date/Time | 2026-03-29T11:42+04:00 |
+| Status | DONE |
+| Executor | AI Agent |
 
 ### Changes Made
 
-- 
+_List of files created/modified:_
+
+- `backend/src/main/resources/db/changelog/changes/004-create-channels.yaml` — channels table with workspace FK, type, position, indexes
+- `backend/src/main/resources/db/changelog/db.changelog-master.yaml` — added 004 include
+- `backend/src/main/java/ru/timchat/channel/domain/ChannelType.java` — enum (TEXT, VOICE, VIDEO)
+- `backend/src/main/java/ru/timchat/channel/domain/Channel.java` — JPA entity (id, workspaceId, name, type, position, createdAt, updatedAt). Type is immutable — no setter/update method for type.
+- `backend/src/main/java/ru/timchat/channel/domain/ChannelRepository.java` — JPA repository with findByWorkspaceIdOrderByPositionAsc, countByWorkspaceId
+- `backend/src/main/java/ru/timchat/channel/application/ChannelService.java` — create, getById, listVisible (filtered by CHANNEL_VIEW), update (name only), delete, reorder
+- `backend/src/main/java/ru/timchat/channel/api/ChannelController.java` — REST endpoints: POST/GET workspaces/{id}/channels, GET/PUT/DELETE channels/{id}, PUT workspaces/{id}/channels/order
+- `backend/src/main/java/ru/timchat/channel/api/CreateChannelRequest.java` — request DTO (record) with @NotBlank name, @NotNull type
+- `backend/src/main/java/ru/timchat/channel/api/UpdateChannelRequest.java` — request DTO (record) with @NotBlank name
+- `backend/src/main/java/ru/timchat/channel/api/ReorderChannelsRequest.java` — request DTO (record) with @NotEmpty channelIds
+- `backend/src/main/java/ru/timchat/channel/api/ChannelResponse.java` — response DTO (record)
+- `backend/src/main/java/ru/timchat/channel/mapper/ChannelMapper.java` — entity → DTO mapping
+- `backend/src/main/java/ru/timchat/common/handler/GlobalExceptionHandler.java` — added HttpMessageNotReadableException handler for 400 on invalid enum values
+- `backend/src/main/resources/messages.properties` — added channel error/validation keys
+- `backend/src/main/resources/messages_en.properties` — added English channel messages
+- `backend/src/main/resources/messages_ru.properties` — added Russian channel messages
+- `backend/src/test/java/ru/timchat/channel/application/ChannelServiceTest.java` — 10 unit tests
+- `backend/src/test/java/ru/timchat/channel/api/ChannelControllerTest.java` — 8 integration tests
 
 ### Risks Found
 
-- 
+- Channel type immutability is enforced at the domain level (no setter/update method for type field). There is no explicit error message returned when a client tries to change type — the UpdateChannelRequest simply does not accept a type field.
+- Reorder requires all channels in the workspace to be included. Partial reorder is rejected with validation error.
+- Channel visibility filtering uses per-channel permission check. Without channel-specific overrides, visibility falls back to workspace-level CHANNEL_VIEW permission (which all roles except GUEST have by default).
 
 ### Gaps Found
 
-- 
+- No @PreAuthorize on channel endpoints yet — permission checks for create/update/delete are deferred to later stages when workspace membership enforcement is tightened across all endpoints.
+- listVisible filters by CHANNEL_VIEW permission. Without channel-specific overrides, all channels are visible to members with CHANNEL_VIEW (OWNER, ADMIN, MEMBER roles).
+- No realtime channel subscription events (Stage 11).
+- No messages in channels yet (Stage 7).
 
 ### Fixes Applied
 
-- 
+_Fixes beyond original stage scope:_
+
+- Added `HttpMessageNotReadableException` handler in `GlobalExceptionHandler` — returns HTTP 400 instead of 500 for invalid JSON (e.g. invalid enum values like `"type": "INVALID"`). This applies globally, not just to channels.
 
 ### Tests Run
 
 | Test | Result |
 |------|--------|
-| Channel CRUD | |
-| Type validation | |
-| Visibility enforcement | |
-| Channel ordering | |
+| ChannelService — create saves channel with correct type | PASS |
+| ChannelService — create voice channel sets correct type | PASS |
+| ChannelService — create throws not found for missing workspace | PASS |
+| ChannelService — update changes name | PASS |
+| ChannelService — update throws not found for missing channel | PASS |
+| ChannelService — delete removes channel | PASS |
+| ChannelService — listVisible filters by permission | PASS |
+| ChannelService — reorder updates positions | PASS |
+| ChannelService — reorder throws validation for missing channel | PASS |
+| ChannelService — reorder throws validation for incomplete list | PASS |
+| ChannelController — create TEXT channel returns 201 | PASS |
+| ChannelController — create VOICE channel returns 201 | PASS |
+| ChannelController — create VIDEO channel returns 201 | PASS |
+| ChannelController — invalid type returns 400 | PASS |
+| ChannelController — list channels after create returns channel | PASS |
+| ChannelController — update changes name keeps type | PASS |
+| ChannelController — delete returns 204 | PASS |
+| ChannelController — position increments automatically | PASS |
+| All previous tests (58 from stages 1-5) | PASS |
+| Full mvn test | PASS — 76 tests, 0 failures |
 
 ### Result
 
-- [ ] All acceptance criteria met
-- [ ] Committed
+- [x] All acceptance criteria met
+- [x] Committed
 
 ### Commit
 
 | Field | Value |
 |-------|-------|
 | Hash | |
-| Message | |
+| Message | feat: add channels module with CRUD, types, and visibility enforcement |
 | Pushed | |
 
 ### Next Stage
@@ -571,6 +613,15 @@ _Additional observations, decisions, and deviations:_
 Stage 7: Chat Backend
 
 ### Notes
+
+_Additional observations, decisions, and deviations:_
+
+- Channel type immutability is enforced by design: the Channel entity has no `updateType()` method and the UpdateChannelRequest DTO does not accept a type field. No explicit error message is needed — the API simply does not support changing type.
+- HttpMessageNotReadableException handler added to GlobalExceptionHandler as a global fix — this was needed to properly return 400 for invalid enum values in JSON requests.
+- listVisible implementation uses PermissionResolutionService.hasChannelPermission per channel. This is correct for MVP but may need optimization if a workspace has hundreds of channels (N+1 permission checks). Not a concern for MVP scale.
+- All DTOs are Java records per project conventions.
+- All entities are regular Java classes with @Getter and explicit constructors.
+- Controllers return DTOs directly with @ResponseStatus (no ResponseEntity).
 
 ---
 
