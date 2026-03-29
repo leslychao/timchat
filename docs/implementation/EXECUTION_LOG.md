@@ -70,15 +70,15 @@ _Fixes beyond original stage scope:_
 ### Result
 
 - [x] All acceptance criteria met
-- [ ] Committed
+- [x] Committed
 
 ### Commit
 
 | Field | Value |
 |-------|-------|
-| Hash | pending |
+| Hash | 0e6bda2 |
 | Message | feat: scaffold project structure with Maven backend, Angular frontend, and Docker Compose infra |
-| Pushed | pending |
+| Pushed | YES |
 
 ### Next Stage
 
@@ -100,51 +100,85 @@ _Additional observations, decisions, or deviations:_
 
 | Field | Value |
 |-------|-------|
-| Date/Time | |
-| Status | PLANNED |
-| Executor | |
+| Date/Time | 2026-03-29T09:46+04:00 |
+| Status | DONE |
+| Executor | AI Agent |
 
 ### Changes Made
 
-- 
+_List of files created/modified:_
+
+- `backend/src/main/java/ru/timchat/common/error/ErrorResponse.java` — record: code, message, details, traceId
+- `backend/src/main/java/ru/timchat/common/error/ApiException.java` — abstract base exception with errorCode, messageKey, args
+- `backend/src/main/java/ru/timchat/common/error/NotFoundException.java` — 404 exception
+- `backend/src/main/java/ru/timchat/common/error/ForbiddenException.java` — 403 exception
+- `backend/src/main/java/ru/timchat/common/error/ConflictException.java` — 409 exception
+- `backend/src/main/java/ru/timchat/common/error/ValidationException.java` — 422 exception
+- `backend/src/main/java/ru/timchat/common/handler/GlobalExceptionHandler.java` — @RestControllerAdvice with typed handlers for each exception + generic fallback
+- `backend/src/main/java/ru/timchat/common/config/I18nConfig.java` — MessageSource + AcceptHeaderLocaleResolver (default: English)
+- `backend/src/main/resources/messages.properties` — default (English) message bundle
+- `backend/src/main/resources/messages_en.properties` — English message bundle
+- `backend/src/main/resources/messages_ru.properties` — Russian message bundle
+- `backend/src/test/java/ru/timchat/common/handler/GlobalExceptionHandlerTest.java` — 9 unit tests for exception handler
 
 ### Risks Found
 
-- 
+- JVM system locale on the dev machine is Russian. Without `fallbackToSystemLocale(false)` on MessageSource, unsupported locales (e.g. French) would fall back to Russian instead of the default English. Fixed in I18nConfig.
+- Error response structure is now locked in. Changing it later affects all consumers.
 
 ### Gaps Found
 
-- 
+- Only generic error codes implemented (error.not-found, error.forbidden, error.conflict, error.validation, error.internal). Domain-specific codes will be added in later stages.
+- No auth-related error handling yet (Stage 3).
+- MethodArgumentNotValidException handler exists but is not tested with a real @Valid DTO — will be tested when first validated endpoint is created.
 
 ### Fixes Applied
 
-- 
+_Fixes beyond original stage scope:_
+
+- Added `fallbackToSystemLocale(false)` to `ReloadableResourceBundleMessageSource` to ensure unsupported locales always fall back to default English, not JVM system locale.
 
 ### Tests Run
 
 | Test | Result |
 |------|--------|
-| GlobalExceptionHandler tests | |
-| i18n locale resolution | |
+| GlobalExceptionHandler — NotFoundException returns 404 (en) | PASS |
+| GlobalExceptionHandler — NotFoundException returns 404 (ru) | PASS |
+| GlobalExceptionHandler — Missing locale defaults to English | PASS |
+| GlobalExceptionHandler — ForbiddenException returns 403 (en) | PASS |
+| GlobalExceptionHandler — ForbiddenException returns 403 (ru) | PASS |
+| GlobalExceptionHandler — ConflictException returns 409 | PASS |
+| GlobalExceptionHandler — ValidationException returns 422 | PASS |
+| GlobalExceptionHandler — Generic exception returns 500 | PASS |
+| GlobalExceptionHandler — Unsupported locale (fr) defaults to English | PASS |
+| TimChatApplicationTest (smoke) | PASS |
+| Full mvn test | PASS — 10 tests, 0 failures |
 
 ### Result
 
-- [ ] All acceptance criteria met
-- [ ] Committed
+- [x] All acceptance criteria met
+- [x] Committed
 
 ### Commit
 
 | Field | Value |
 |-------|-------|
-| Hash | |
-| Message | |
-| Pushed | |
+| Hash | 9e2e447 |
+| Message | feat: add common module with error handling, i18n, and base exception hierarchy |
+| Pushed | YES |
 
 ### Next Stage
 
 Stage 3: Auth Module
 
 ### Notes
+
+_Additional observations, decisions, or deviations:_
+
+- Used standalone MockMvc setup (not @WebMvcTest) for tests — more reliable for testing inner static test controllers
+- `fallbackToSystemLocale(false)` is critical for consistent i18n behavior across different environments
+- Message bundle uses Unicode escapes for Russian text in .properties files
+- ErrorResponse is a Java record as per project conventions (records for DTOs)
 
 ---
 
