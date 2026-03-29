@@ -629,47 +629,91 @@ _Additional observations, decisions, and deviations:_
 
 | Field | Value |
 |-------|-------|
-| Date/Time | |
-| Status | PLANNED |
-| Executor | |
+| Date/Time | 2026-03-29T11:50+04:00 |
+| Status | DONE |
+| Executor | AI Agent |
 
 ### Changes Made
 
-- 
+_List of files created/modified:_
+
+- `backend/src/main/resources/db/changelog/changes/005-create-messages.yaml` — messages, message_revisions, message_deletions, message_attachments tables with FKs and indexes
+- `backend/src/main/resources/db/changelog/db.changelog-master.yaml` — added 005 include
+- `backend/src/main/java/ru/timchat/message/domain/Message.java` — JPA entity (id, channelId, authorId, content, deleted, createdAt, updatedAt)
+- `backend/src/main/java/ru/timchat/message/domain/MessageRevision.java` — JPA entity (id, messageId, previousContent, editedAt)
+- `backend/src/main/java/ru/timchat/message/domain/MessageDeletion.java` — JPA entity (id, messageId, deletedBy, deletedAt, reason)
+- `backend/src/main/java/ru/timchat/message/domain/MessageAttachment.java` — JPA entity (id, messageId, attachmentMetadataId)
+- `backend/src/main/java/ru/timchat/message/domain/MessageRepository.java` — JPA repository with keyset pagination queries
+- `backend/src/main/java/ru/timchat/message/domain/MessageRevisionRepository.java` — JPA repository
+- `backend/src/main/java/ru/timchat/message/domain/MessageDeletionRepository.java` — JPA repository
+- `backend/src/main/java/ru/timchat/message/domain/MessageAttachmentRepository.java` — JPA repository
+- `backend/src/main/java/ru/timchat/message/application/MessageService.java` — send, edit, delete, getHistory with keyset pagination, permission checks
+- `backend/src/main/java/ru/timchat/message/api/MessageController.java` — REST endpoints: POST send, PUT edit, DELETE, GET history
+- `backend/src/main/java/ru/timchat/message/api/SendMessageRequest.java` — request DTO (record) with validation
+- `backend/src/main/java/ru/timchat/message/api/EditMessageRequest.java` — request DTO (record) with validation
+- `backend/src/main/java/ru/timchat/message/api/MessageResponse.java` — response DTO (record)
+- `backend/src/main/java/ru/timchat/message/api/PageResponse.java` — generic paginated response DTO (record)
+- `backend/src/main/resources/messages.properties` — added message error/validation keys
+- `backend/src/main/resources/messages_en.properties` — added English message error keys
+- `backend/src/main/resources/messages_ru.properties` — added Russian message error keys
+- `backend/src/test/java/ru/timchat/message/application/MessageServiceTest.java` — 12 unit tests
+- `backend/src/test/java/ru/timchat/message/api/MessageControllerTest.java` — 7 integration tests
 
 ### Risks Found
 
-- 
+- Keyset pagination cursor is Base64-encoded `epochMillis:UUID`. If system clock precision differs between JVMs, millisecond-level cursor resolution could cause edge cases. Negligible for MVP.
+- `toResponse()` performs N+1 on `userRepository.findById` and `attachmentRepository.findByMessageId` per message. For MVP history loads (max 100 messages) this is acceptable, but may need batch loading optimization at scale.
 
 ### Gaps Found
 
-- 
+- Messages are only delivered via REST (polling), not realtime (Stage 12)
+- No attachment file upload yet — only MessageAttachment metadata link with nullable FK (Stage 8)
+- No @PreAuthorize on message endpoints — permission checks are done at service level via PermissionResolutionService
+- Edit is restricted to message author only; no admin-override for editing
 
 ### Fixes Applied
 
-- 
+_Fixes beyond original stage scope:_
+
+- None required — stage implemented cleanly within scope
 
 ### Tests Run
 
 | Test | Result |
 |------|--------|
-| Send message | |
-| Edit message (revision created) | |
-| Delete message (soft delete) | |
-| Keyset pagination | |
-| Permission checks | |
+| MessageService — sendMessage saves and returns response | PASS |
+| MessageService — sendMessage without permission throws forbidden | PASS |
+| MessageService — sendMessage channel not found throws not found | PASS |
+| MessageService — editMessage creates revision and updates content | PASS |
+| MessageService — editMessage by non-owner throws forbidden | PASS |
+| MessageService — editMessage deleted message throws validation | PASS |
+| MessageService — editMessage not found throws not found | PASS |
+| MessageService — deleteMessage own creates record and marks deleted | PASS |
+| MessageService — deleteMessage other requires DELETE_ANY | PASS |
+| MessageService — deleteMessage already deleted is idempotent | PASS |
+| MessageService — getHistory without cursor returns first page | PASS |
+| MessageService — getHistory channel not found throws not found | PASS |
+| MessageController — sendMessage returns 201 | PASS |
+| MessageController — sendMessage empty content returns 422 | PASS |
+| MessageController — editMessage changes content | PASS |
+| MessageController — deleteMessage returns 204 | PASS |
+| MessageController — getHistory after send returns message | PASS |
+| MessageController — deleted messages not returned in history | PASS |
+| MessageController — pagination with cursor returns correct pages | PASS |
+| All previous tests (76 from stages 1-6) | PASS |
+| Full mvn test | PASS — 95 tests, 0 failures |
 
 ### Result
 
-- [ ] All acceptance criteria met
-- [ ] Committed
+- [x] All acceptance criteria met
+- [x] Committed
 
 ### Commit
 
 | Field | Value |
 |-------|-------|
 | Hash | |
-| Message | |
+| Message | feat: add chat message module with send, edit, delete, and keyset pagination |
 | Pushed | |
 
 ### Next Stage
@@ -677,6 +721,16 @@ _Additional observations, decisions, and deviations:_
 Stage 8: Attachments Backend
 
 ### Notes
+
+_Additional observations, decisions, and deviations:_
+
+- Keyset pagination uses Base64-encoded cursor with `epochMillis:UUID` format for compact, URL-safe representation
+- Delete is idempotent — deleting an already-deleted message is a no-op (no error thrown)
+- Deleted messages have `content` nulled in the response DTO to prevent content leakage
+- MessageAttachment FK to attachment_metadata table is nullable since attachment metadata module doesn't exist yet (Stage 8)
+- Permission checks for send use MESSAGE_WRITE on channel; delete uses MESSAGE_DELETE_OWN for own messages and MESSAGE_DELETE_ANY for others
+- All DTOs are Java records per project conventions
+- All entities are regular Java classes with @Getter and explicit constructors
 
 ---
 

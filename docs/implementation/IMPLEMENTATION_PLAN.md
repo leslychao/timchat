@@ -1233,14 +1233,14 @@ None.
 
 #### 11. Acceptance criteria
 
-- [ ] POST /api/channels/{id}/messages sends message
-- [ ] PUT /api/messages/{id} edits message (creates revision)
-- [ ] DELETE /api/messages/{id} soft-deletes message
-- [ ] GET /api/channels/{id}/messages returns paginated history
-- [ ] Pagination cursor works correctly
-- [ ] MESSAGE_WRITE permission required to send
-- [ ] MESSAGE_DELETE_OWN allows deleting own messages only
-- [ ] MESSAGE_DELETE_ANY allows deleting any message
+- [x] POST /api/channels/{id}/messages sends message
+- [x] PUT /api/messages/{id} edits message (creates revision)
+- [x] DELETE /api/messages/{id} soft-deletes message
+- [x] GET /api/channels/{id}/messages returns paginated history
+- [x] Pagination cursor works correctly
+- [x] MESSAGE_WRITE permission required to send
+- [x] MESSAGE_DELETE_OWN allows deleting own messages only
+- [x] MESSAGE_DELETE_ANY allows deleting any message
 
 #### 12. Manual verification checklist
 

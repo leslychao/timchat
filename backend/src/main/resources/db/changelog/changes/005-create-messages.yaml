@@ -1,0 +1,187 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-messages
+      author: timchat
+      changes:
+        - createTable:
+            tableName: messages
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: channel_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: author_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content
+                  type: varchar(4000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: messages
+            baseColumnNames: channel_id
+            referencedTableName: channels
+            referencedColumnNames: id
+            constraintName: fk_messages_channel
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: messages
+            baseColumnNames: author_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_messages_author
+
+        - createIndex:
+            tableName: messages
+            indexName: idx_messages_channel_created_id
+            columns:
+              - column:
+                  name: channel_id
+              - column:
+                  name: created_at
+                  descending: true
+              - column:
+                  name: id
+                  descending: true
+
+        - createTable:
+            tableName: message_revisions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: message_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: previous_content
+                  type: varchar(4000)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: edited_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            baseTableName: message_revisions
+            baseColumnNames: message_id
+            referencedTableName: messages
+            referencedColumnNames: id
+            constraintName: fk_message_revisions_message
+            onDelete: CASCADE
+
+        - createIndex:
+            tableName: message_revisions
+            indexName: idx_message_revisions_message
+            columns:
+              - column:
+                  name: message_id
+
+        - createTable:
+            tableName: message_deletions
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: message_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted_by
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: deleted_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: reason
+                  type: varchar(500)
+
+        - addForeignKeyConstraint:
+            baseTableName: message_deletions
+            baseColumnNames: message_id
+            referencedTableName: messages
+            referencedColumnNames: id
+            constraintName: fk_message_deletions_message
+            onDelete: CASCADE
+
+        - addUniqueConstraint:
+            tableName: message_deletions
+            columnNames: message_id
+            constraintName: uq_message_deletions_message
+
+        - createTable:
+            tableName: message_attachments
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: message_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: attachment_metadata_id
+                  type: uuid
+
+        - addForeignKeyConstraint:
+            baseTableName: message_attachments
+            baseColumnNames: message_id
+            referencedTableName: messages
+            referencedColumnNames: id
+            constraintName: fk_message_attachments_message
+            onDelete: CASCADE
+
+        - createIndex:
+            tableName: message_attachments
+            indexName: idx_message_attachments_message
+            columns:
+              - column:
+                  name: message_id
