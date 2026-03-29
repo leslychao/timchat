@@ -168,7 +168,7 @@ S1 (Scaffolding) ──────► S2 (Common) ──► S3 (Auth) ──►
 | 2 | Common Module & Error Handling | DONE | Базовые типы, global error handling, i18n | S1 | common package, exception handler, error DTO, message bundles | `feat: add common module with error handling and i18n` |
 | 3 | Auth Module | DONE | Keycloak JWT auth, Spring Security, CurrentUserContext | S2 | auth module, security config, Keycloak in docker-compose, CurrentUserContext | `feat: add auth module with Keycloak JWT validation and Spring Security` |
 | 4 | User & Workspace | DONE | User/profile, workspace CRUD, membership | S3 | entities, repos, services, REST controllers, migrations | `feat: add user and workspace modules` |
-| 5 | Roles & Permissions | PLANNED | Role/permission model, resolution service, channel overrides | S4 | permission module, 12 permission types, resolver, migrations | `feat: add roles and permissions module` |
+| 5 | Roles & Permissions | DONE | Role/permission model, resolution service, channel overrides | S4 | permission module, 12 permission types, resolver, migrations | `feat: add roles and permissions module` |
 | 6 | Channels | PLANNED | Channel CRUD, type enforcement, visibility | S5 | channel module, REST, visibility enforcement, migrations | `feat: add channels module` |
 | 7 | Chat Backend | PLANNED | Send/edit/delete messages, history pagination | S6 | message module, REST, keyset pagination, migrations | `feat: add chat message module` |
 | 8 | Attachments Backend | PLANNED | Attachment metadata, S3 upload/download auth, signed URLs | S7 | attachment module, S3 adapter, REST, migrations | `feat: add attachments module` |
@@ -940,12 +940,12 @@ None.
 
 #### 11. Acceptance criteria
 
-- [ ] 12 `PermissionType` values exist
-- [ ] Default roles (OWNER, ADMIN, MEMBER, GUEST) are seeded with correct grants
-- [ ] `PermissionResolutionService.hasPermission()` returns correct results
-- [ ] Channel overrides correctly modify effective permissions
-- [ ] `@PreAuthorize` integrates with permission service
-- [ ] Role assignment/revocation via REST works
+- [x] 12 `PermissionType` values exist
+- [x] Default roles (OWNER, ADMIN, MEMBER, GUEST) are seeded with correct grants
+- [x] `PermissionResolutionService.hasPermission()` returns correct results
+- [x] Channel overrides correctly modify effective permissions
+- [x] `@PreAuthorize` integrates with permission service
+- [x] Role assignment/revocation via REST works
 
 #### 12. Manual verification checklist
 

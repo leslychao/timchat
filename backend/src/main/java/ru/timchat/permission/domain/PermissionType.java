@@ -1,0 +1,16 @@
+package ru.timchat.permission.domain;
+
+public enum PermissionType {
+  CHANNEL_VIEW,
+  MESSAGE_WRITE,
+  MESSAGE_DELETE_OWN,
+  MESSAGE_DELETE_ANY,
+  ROOM_JOIN,
+  ROOM_SPEAK,
+  ROOM_VIDEO,
+  ROOM_SCREEN_SHARE,
+  ROOM_MODERATE,
+  ROOM_FORCE_MUTE,
+  ROOM_KICK,
+  ROOM_MOVE
+}

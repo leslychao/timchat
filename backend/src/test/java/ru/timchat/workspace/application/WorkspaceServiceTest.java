@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.timchat.common.error.ConflictException;
 import ru.timchat.common.error.NotFoundException;
+import ru.timchat.permission.application.RoleService;
 import ru.timchat.workspace.api.CreateWorkspaceRequest;
 import ru.timchat.workspace.api.UpdateWorkspaceRequest;
 import ru.timchat.workspace.domain.Workspace;
@@ -36,6 +37,9 @@ class WorkspaceServiceTest {
   @Mock
   private WorkspaceMemberRepository memberRepository;
 
+  @Mock
+  private RoleService roleService;
+
   @InjectMocks
   private WorkspaceService workspaceService;
 
@@ -44,7 +48,7 @@ class WorkspaceServiceTest {
   @BeforeEach
   void setUp() {
     workspaceService = new WorkspaceService(
-        workspaceRepository, memberRepository, mapper);
+        workspaceRepository, memberRepository, mapper, roleService);
   }
 
   @Test

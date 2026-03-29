@@ -1,0 +1,167 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-create-roles
+      author: timchat
+      changes:
+        - createTable:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workspace_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_roles_workspace
+                    references: workspaces(id)
+              - column:
+                  name: name
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: is_system
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: roles
+            columnNames: workspace_id, name
+            constraintName: uq_roles_workspace_name
+        - createIndex:
+            tableName: roles
+            indexName: idx_roles_workspace
+            columns:
+              - column:
+                  name: workspace_id
+
+  - changeSet:
+      id: 003-create-permission-grants
+      author: timchat
+      changes:
+        - createTable:
+            tableName: permission_grants
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_permission_grants_role
+                    references: roles(id)
+              - column:
+                  name: permission_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: permission_grants
+            columnNames: role_id, permission_type
+            constraintName: uq_permission_grants_role_type
+        - createIndex:
+            tableName: permission_grants
+            indexName: idx_permission_grants_role
+            columns:
+              - column:
+                  name: role_id
+
+  - changeSet:
+      id: 003-create-member-roles
+      author: timchat
+      changes:
+        - createTable:
+            tableName: member_roles
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workspace_member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_member_roles_member
+                    references: workspace_members(id)
+              - column:
+                  name: role_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_member_roles_role
+                    references: roles(id)
+        - addUniqueConstraint:
+            tableName: member_roles
+            columnNames: workspace_member_id, role_id
+            constraintName: uq_member_roles_member_role
+        - createIndex:
+            tableName: member_roles
+            indexName: idx_member_roles_member
+            columns:
+              - column:
+                  name: workspace_member_id
+
+  - changeSet:
+      id: 003-create-channel-permission-overrides
+      author: timchat
+      changes:
+        - createTable:
+            tableName: channel_permission_overrides
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: channel_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_channel_overrides_role
+                    references: roles(id)
+              - column:
+                  name: permission_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: allowed
+                  type: boolean
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: channel_permission_overrides
+            columnNames: channel_id, role_id, permission_type
+            constraintName: uq_channel_overrides_channel_role_type
+        - createIndex:
+            tableName: channel_permission_overrides
+            indexName: idx_channel_overrides_channel
+            columns:
+              - column:
+                  name: channel_id

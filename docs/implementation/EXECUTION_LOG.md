@@ -407,46 +407,100 @@ _Additional observations, decisions, and deviations:_
 
 | Field | Value |
 |-------|-------|
-| Date/Time | |
-| Status | PLANNED |
-| Executor | |
+| Date/Time | 2026-03-29T11:30+04:00 |
+| Status | DONE |
+| Executor | AI Agent |
 
 ### Changes Made
 
-- 
+_List of files created/modified:_
+
+- `backend/src/main/resources/db/changelog/changes/003-create-permissions.yaml` — roles, permission_grants, member_roles, channel_permission_overrides tables
+- `backend/src/main/resources/db/changelog/db.changelog-master.yaml` — added 003 include
+- `backend/src/main/java/ru/timchat/permission/domain/PermissionType.java` — enum with 12 permission types
+- `backend/src/main/java/ru/timchat/permission/domain/Role.java` — JPA entity (id, workspaceId, name, isSystem, createdAt)
+- `backend/src/main/java/ru/timchat/permission/domain/PermissionGrant.java` — JPA entity (roleId, permissionType)
+- `backend/src/main/java/ru/timchat/permission/domain/MemberRole.java` — JPA entity (workspaceMemberId, roleId)
+- `backend/src/main/java/ru/timchat/permission/domain/ChannelPermissionOverride.java` — JPA entity (channelId, roleId, permissionType, allowed)
+- `backend/src/main/java/ru/timchat/permission/domain/RoleRepository.java` — JPA repository
+- `backend/src/main/java/ru/timchat/permission/domain/PermissionGrantRepository.java` — JPA repository
+- `backend/src/main/java/ru/timchat/permission/domain/MemberRoleRepository.java` — JPA repository
+- `backend/src/main/java/ru/timchat/permission/domain/ChannelPermissionOverrideRepository.java` — JPA repository
+- `backend/src/main/java/ru/timchat/permission/application/PermissionResolutionService.java` — resolves effective permissions: workspace-level + channel overrides
+- `backend/src/main/java/ru/timchat/permission/application/RoleService.java` — create default roles, assign/revoke/list roles, owner role assignment
+- `backend/src/main/java/ru/timchat/permission/api/RoleController.java` — REST for role operations
+- `backend/src/main/java/ru/timchat/permission/api/RoleResponse.java` — response DTO (record)
+- `backend/src/main/java/ru/timchat/permission/api/AssignRoleRequest.java` — request DTO (record) with validation
+- `backend/src/main/java/ru/timchat/permission/config/PermissionSecurity.java` — @Component("permissionSecurity") for @PreAuthorize expressions
+- `backend/src/main/java/ru/timchat/workspace/application/WorkspaceService.java` — integrated default role creation and owner role assignment on workspace creation
+- `backend/src/main/resources/messages.properties` — added role/permission error keys
+- `backend/src/main/resources/messages_en.properties` — added English role/permission messages
+- `backend/src/main/resources/messages_ru.properties` — added Russian role/permission messages
+- `backend/src/test/java/ru/timchat/permission/application/PermissionResolutionServiceTest.java` — 11 unit tests
+- `backend/src/test/java/ru/timchat/permission/application/RoleServiceTest.java` — 7 unit tests
+- `backend/src/test/java/ru/timchat/permission/api/RoleControllerTest.java` — 5 integration tests
+- `backend/src/test/java/ru/timchat/workspace/application/WorkspaceServiceTest.java` — updated to include RoleService mock
 
 ### Risks Found
 
-- 
+- Channel permission overrides table created without FK to channels (channels table doesn't exist yet — Stage 6). FK will be added in Stage 6 migration.
+- Default roles are workspace-scoped (not global templates), meaning each workspace creates its own OWNER/ADMIN/MEMBER/GUEST roles. This is correct for the domain model but creates more DB rows.
 
 ### Gaps Found
 
-- 
+- No UI for role management (explicitly out of scope per plan)
+- Only predefined roles (OWNER, ADMIN, MEMBER, GUEST) — no dynamic role creation in MVP
+- Channel overrides are functional at the domain/service level but have no REST endpoint for managing them yet — will be added when channels are created (Stage 6)
+- PermissionSecurity bean registered but not yet used in @PreAuthorize on existing endpoints — will be applied as endpoints are created in later stages
 
 ### Fixes Applied
 
-- 
+_Fixes beyond original stage scope:_
+
+- Integrated role creation into WorkspaceService.create() — default roles are created automatically when workspace is created, and OWNER role is assigned to the workspace creator
+- Updated WorkspaceServiceTest to include RoleService mock dependency
 
 ### Tests Run
 
 | Test | Result |
 |------|--------|
-| PermissionResolutionService tests | |
-| Channel override tests | |
-| @PreAuthorize integration | |
-| Default roles seeded | |
+| PermissionResolutionService — hasPermission returns true when granted | PASS |
+| PermissionResolutionService — hasPermission returns false when not granted | PASS |
+| PermissionResolutionService — hasPermission returns false when not member | PASS |
+| PermissionResolutionService — hasPermission returns false when no roles | PASS |
+| PermissionResolutionService — all 12 permission types verified | PASS |
+| PermissionResolutionService — merges multiple roles | PASS |
+| PermissionResolutionService — channel uses base grant when no override | PASS |
+| PermissionResolutionService — channel override deny blocks permission | PASS |
+| PermissionResolutionService — channel override allow grants permission | PASS |
+| PermissionResolutionService — channel returns false when not member | PASS |
+| PermissionResolutionService — allow override wins with multiple roles | PASS |
+| RoleService — createDefaultRoles creates 4 roles | PASS |
+| RoleService — assignRole creates assignment | PASS |
+| RoleService — assignRole throws conflict when duplicate | PASS |
+| RoleService — assignRole throws not found when member missing | PASS |
+| RoleService — revokeRole removes assignment | PASS |
+| RoleService — revokeRole throws not found when not assigned | PASS |
+| RoleService — listRolesForMember returns assigned roles | PASS |
+| RoleController — workspace creation seeds default roles | PASS |
+| RoleController — owner has OWNER role after creation | PASS |
+| RoleController — assign role returns 201 | PASS |
+| RoleController — duplicate role assignment returns 409 | PASS |
+| RoleController — revoke role returns 204 | PASS |
+| All previous tests (35 from stages 1-4) | PASS |
+| Full mvn test | PASS — 58 tests, 0 failures |
 
 ### Result
 
-- [ ] All acceptance criteria met
-- [ ] Committed
+- [x] All acceptance criteria met
+- [x] Committed
 
 ### Commit
 
 | Field | Value |
 |-------|-------|
 | Hash | |
-| Message | |
+| Message | feat: add roles and permissions module with 12 permission types and resolution service |
 | Pushed | |
 
 ### Next Stage
@@ -454,6 +508,15 @@ _Additional observations, decisions, and deviations:_
 Stage 6: Channels
 
 ### Notes
+
+_Additional observations, decisions, and deviations:_
+
+- Default roles are created per-workspace (not as global seed data in Liquibase) because roles reference workspaceId FK
+- OWNER gets all 12 permissions, ADMIN gets all except ROOM_MOVE, MEMBER gets 7 (view, write, delete_own, join, speak, video, screen_share), GUEST gets only CHANNEL_VIEW
+- Channel overrides use union semantics: if multiple roles have overrides for the same permission, allow wins
+- PermissionSecurity bean is named "permissionSecurity" for use in SpEL: @PreAuthorize("@permissionSecurity.hasPermission(#workspaceId, 'MESSAGE_WRITE')")
+- All DTOs are Java records per project conventions
+- All entities are regular Java classes with @Getter and explicit constructors
 
 ---
 

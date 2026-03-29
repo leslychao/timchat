@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.timchat.common.error.ConflictException;
 import ru.timchat.common.error.NotFoundException;
+import ru.timchat.permission.application.RoleService;
 import ru.timchat.workspace.api.CreateWorkspaceRequest;
 import ru.timchat.workspace.api.UpdateWorkspaceRequest;
 import ru.timchat.workspace.api.WorkspaceResponse;
@@ -25,6 +26,7 @@ public class WorkspaceService {
   private final WorkspaceRepository workspaceRepository;
   private final WorkspaceMemberRepository memberRepository;
   private final WorkspaceMapper workspaceMapper;
+  private final RoleService roleService;
 
   @Transactional
   public WorkspaceResponse create(CreateWorkspaceRequest request,
@@ -38,6 +40,9 @@ public class WorkspaceService {
 
     var member = new WorkspaceMember(workspace.getId(), ownerId);
     memberRepository.save(member);
+
+    roleService.createDefaultRoles(workspace.getId());
+    roleService.assignOwnerRole(workspace.getId(), member.getId());
 
     log.info("Workspace created: id={}, slug={}, owner={}",
         workspace.getId(), workspace.getSlug(), ownerId);
