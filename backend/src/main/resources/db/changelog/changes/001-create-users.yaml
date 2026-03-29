@@ -1,0 +1,77 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users
+      author: timchat
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: external_id
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: username
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: users
+            indexName: idx_users_external_id
+            columns:
+              - column:
+                  name: external_id
+
+  - changeSet:
+      id: 001-create-user-profiles
+      author: timchat
+      changes:
+        - createTable:
+            tableName: user_profiles
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    foreignKeyName: fk_user_profiles_user
+                    references: users(id)
+              - column:
+                  name: display_name
+                  type: varchar(100)
+              - column:
+                  name: avatar_url
+                  type: varchar(500)
+              - column:
+                  name: status_text
+                  type: varchar(200)

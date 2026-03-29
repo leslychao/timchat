@@ -281,47 +281,108 @@ _Additional observations, decisions, and deviations:_
 
 | Field | Value |
 |-------|-------|
-| Date/Time | |
-| Status | PLANNED |
-| Executor | |
+| Date/Time | 2026-03-29T11:10+04:00 |
+| Status | DONE |
+| Executor | AI Agent |
 
 ### Changes Made
 
-- 
+_List of files created/modified:_
+
+- `backend/src/main/resources/db/changelog/db.changelog-master.yaml` — updated to include migration files
+- `backend/src/main/resources/db/changelog/changes/001-create-users.yaml` — users + user_profiles tables
+- `backend/src/main/resources/db/changelog/changes/002-create-workspaces.yaml` — workspaces, workspace_members, invites tables
+- `backend/src/main/java/ru/timchat/user/domain/User.java` — JPA entity (id, externalId, username, email, timestamps, profile cascade)
+- `backend/src/main/java/ru/timchat/user/domain/UserProfile.java` — JPA entity (userId FK, displayName, avatarUrl, statusText)
+- `backend/src/main/java/ru/timchat/user/domain/UserRepository.java` — JPA repository with findByExternalId
+- `backend/src/main/java/ru/timchat/user/application/UserService.java` — getOrCreateUser (JWT auto-provisioning), getProfile, updateProfile
+- `backend/src/main/java/ru/timchat/user/api/UserController.java` — GET /api/users/me, PUT /api/users/me/profile
+- `backend/src/main/java/ru/timchat/user/api/UserProfileResponse.java` — response DTO (record)
+- `backend/src/main/java/ru/timchat/user/api/UpdateProfileRequest.java` — request DTO (record) with validation
+- `backend/src/main/java/ru/timchat/workspace/domain/Workspace.java` — JPA entity (id, name, slug, ownerId, timestamps)
+- `backend/src/main/java/ru/timchat/workspace/domain/WorkspaceMember.java` — JPA entity (id, workspaceId, userId, joinedAt)
+- `backend/src/main/java/ru/timchat/workspace/domain/Invite.java` — JPA entity (id, workspaceId, code, createdBy, expiresAt, usedBy, usedAt)
+- `backend/src/main/java/ru/timchat/workspace/domain/WorkspaceRepository.java` — JPA repository with findBySlug, existsBySlug
+- `backend/src/main/java/ru/timchat/workspace/domain/WorkspaceMemberRepository.java` — JPA repository with workspace/user queries
+- `backend/src/main/java/ru/timchat/workspace/domain/InviteRepository.java` — JPA repository with findByCode
+- `backend/src/main/java/ru/timchat/workspace/application/WorkspaceService.java` — create, getById, listForUser, update, delete
+- `backend/src/main/java/ru/timchat/workspace/application/MembershipService.java` — addMember, removeMember, listMembers, isMember
+- `backend/src/main/java/ru/timchat/workspace/application/InviteService.java` — createInvite, acceptInvite
+- `backend/src/main/java/ru/timchat/workspace/api/WorkspaceController.java` — full REST for workspaces, members, invites
+- `backend/src/main/java/ru/timchat/workspace/api/CreateWorkspaceRequest.java` — request DTO with slug validation
+- `backend/src/main/java/ru/timchat/workspace/api/UpdateWorkspaceRequest.java` — request DTO
+- `backend/src/main/java/ru/timchat/workspace/api/AddMemberRequest.java` — request DTO
+- `backend/src/main/java/ru/timchat/workspace/api/WorkspaceResponse.java` — response DTO
+- `backend/src/main/java/ru/timchat/workspace/api/WorkspaceMemberResponse.java` — response DTO
+- `backend/src/main/java/ru/timchat/workspace/api/InviteResponse.java` — response DTO
+- `backend/src/main/java/ru/timchat/workspace/mapper/WorkspaceMapper.java` — entity → DTO mapping
+- `backend/src/main/java/ru/timchat/auth/context/CurrentUserContext.java` — added getEmail() method
+- `backend/src/main/resources/messages.properties` — added user/workspace/invite error keys
+- `backend/src/main/resources/messages_en.properties` — added English user/workspace/invite messages
+- `backend/src/main/resources/messages_ru.properties` — added Russian user/workspace/invite messages
+- `backend/src/test/java/ru/timchat/auth/config/TestSecurityConfig.java` — added email claim to test JWT
+- `backend/src/test/java/ru/timchat/workspace/application/WorkspaceServiceTest.java` — 6 unit tests
+- `backend/src/test/java/ru/timchat/workspace/application/InviteServiceTest.java` — 7 unit tests
+- `backend/src/test/java/ru/timchat/workspace/api/WorkspaceControllerTest.java` — 6 integration tests
 
 ### Risks Found
 
-- 
+- Internal user ID (UUID.randomUUID) differs from external OIDC sub claim. User lookup must always go through externalId → internal id mapping. Tests must not assume JWT sub == internal userId.
+- Invite code is generated from UUID substring (8 chars) — collision probability is negligible for MVP but should be monitored at scale.
 
 ### Gaps Found
 
-- 
+- No permission checks on workspace operations (added in Stage 5)
+- No workspace-level access restrictions yet (owner/member enforcement deferred to Stage 5)
+- Invite is single-use — no multi-use invite support in MVP
+- User email is extracted from JWT; if email claim is missing, a fallback address is used
+- No endpoint for listing invites for a workspace (not in stage scope)
 
 ### Fixes Applied
 
-- 
+_Fixes beyond original stage scope:_
+
+- Added `getEmail()` to `CurrentUserContext` — needed for user provisioning from JWT
+- Added `email` claim to `TestSecurityConfig` mock JWT decoder — needed for controller tests
+- Workspace creation automatically adds owner as first member — ensures workspace always has at least one member
 
 ### Tests Run
 
 | Test | Result |
 |------|--------|
-| Workspace CRUD | |
-| Membership management | |
-| Invite flow | |
-| User profile | |
-| Liquibase migrations | |
+| WorkspaceService — create saves workspace and owner member | PASS |
+| WorkspaceService — create throws conflict on duplicate slug | PASS |
+| WorkspaceService — getById throws not found for missing workspace | PASS |
+| WorkspaceService — listForUser returns member workspaces | PASS |
+| WorkspaceService — update updates name and slug | PASS |
+| WorkspaceService — delete removes workspace and members | PASS |
+| InviteService — createInvite returns invite with code | PASS |
+| InviteService — createInvite throws not found if workspace missing | PASS |
+| InviteService — acceptInvite adds member and marks used | PASS |
+| InviteService — acceptInvite throws not found for missing code | PASS |
+| InviteService — acceptInvite throws conflict if already used | PASS |
+| InviteService — acceptInvite throws validation if expired | PASS |
+| InviteService — acceptInvite throws conflict if already member | PASS |
+| WorkspaceController — createWorkspace returns 201 | PASS |
+| WorkspaceController — listWorkspaces after create returns workspace | PASS |
+| WorkspaceController — listMembers after create contains owner | PASS |
+| WorkspaceController — createWorkspace duplicate slug returns 409 | PASS |
+| WorkspaceController — getUserProfile returns current user | PASS |
+| WorkspaceController — updateProfile changes display name | PASS |
+| All previous tests (16 from stages 1-3) | PASS |
+| Full mvn test | PASS — 35 tests, 0 failures |
 
 ### Result
 
-- [ ] All acceptance criteria met
-- [ ] Committed
+- [x] All acceptance criteria met
+- [x] Committed
 
 ### Commit
 
 | Field | Value |
 |-------|-------|
 | Hash | |
-| Message | |
+| Message | feat: add user and workspace modules with CRUD, membership, and invites |
 | Pushed | |
 
 ### Next Stage
@@ -329,6 +390,16 @@ _Additional observations, decisions, and deviations:_
 Stage 5: Roles & Permissions
 
 ### Notes
+
+_Additional observations, decisions, and deviations:_
+
+- User entity uses internal UUID id (randomized), not the OIDC external sub claim — mapping is through `externalId` field and `getOrCreateUser` auto-provisioning
+- Workspace owner is automatically added as first member during workspace creation
+- Invite codes are 8-character UUID substrings with 7-day default expiry
+- All DTOs are Java records per project conventions
+- All entities are regular Java classes with @Getter and explicit constructors
+- Controllers return DTOs directly with @ResponseStatus (no ResponseEntity)
+- i18n messages added for both ru and en locales with Unicode escapes in .properties files
 
 ---
 

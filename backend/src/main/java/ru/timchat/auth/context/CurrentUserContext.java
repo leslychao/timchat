@@ -20,6 +20,10 @@ public final class CurrentUserContext {
     return getJwt().getClaimAsString("preferred_username");
   }
 
+  public static String getEmail() {
+    return getJwt().getClaimAsString("email");
+  }
+
   @SuppressWarnings("unchecked")
   public static List<String> getRoles() {
     var jwt = getJwt();

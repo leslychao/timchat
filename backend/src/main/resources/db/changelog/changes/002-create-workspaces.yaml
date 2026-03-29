@@ -1,0 +1,152 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-workspaces
+      author: timchat
+      changes:
+        - createTable:
+            tableName: workspaces
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: slug
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: owner_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_workspaces_owner
+                    references: users(id)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: workspaces
+            indexName: idx_workspaces_slug
+            unique: true
+            columns:
+              - column:
+                  name: slug
+
+  - changeSet:
+      id: 002-create-workspace-members
+      author: timchat
+      changes:
+        - createTable:
+            tableName: workspace_members
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workspace_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_workspace_members_workspace
+                    references: workspaces(id)
+              - column:
+                  name: user_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_workspace_members_user
+                    references: users(id)
+              - column:
+                  name: joined_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: workspace_members
+            columnNames: workspace_id, user_id
+            constraintName: uq_workspace_members_workspace_user
+        - createIndex:
+            tableName: workspace_members
+            indexName: idx_workspace_members_user
+            columns:
+              - column:
+                  name: user_id
+
+  - changeSet:
+      id: 002-create-invites
+      author: timchat
+      changes:
+        - createTable:
+            tableName: invites
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workspace_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_invites_workspace
+                    references: workspaces(id)
+              - column:
+                  name: code
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: created_by
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_invites_created_by
+                    references: users(id)
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: used_by
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_invites_used_by
+                    references: users(id)
+              - column:
+                  name: used_at
+                  type: timestamp with time zone
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: invites
+            indexName: idx_invites_code
+            unique: true
+            columns:
+              - column:
+                  name: code
