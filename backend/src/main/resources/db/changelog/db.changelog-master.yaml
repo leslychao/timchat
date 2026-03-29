@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/004-create-channels.yaml
   - include:
       file: db/changelog/changes/005-create-messages.yaml
+  - include:
+      file: db/changelog/changes/006-create-attachments.yaml

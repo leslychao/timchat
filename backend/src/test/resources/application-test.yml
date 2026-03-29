@@ -29,3 +29,22 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+app:
+  storage:
+    endpoint: http://localhost:9999
+    access-key: test
+    secret-key: test
+    bucket: test-bucket
+    region: us-east-1
+    upload-url-expiry-seconds: 600
+    download-url-expiry-seconds: 3600
+    max-file-size-bytes: 26214400
+    allowed-content-types:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      - application/pdf
+      - text/plain
+      - application/zip

@@ -1,0 +1,101 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-attachment-metadata
+      author: timchat
+      changes:
+        - createTable:
+            tableName: attachment_metadata
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: workspace_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: channel_id
+                  type: uuid
+              - column:
+                  name: uploaded_by
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: content_type
+                  type: varchar(127)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size_bytes
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_key
+                  type: varchar(512)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+        - addForeignKeyConstraint:
+            constraintName: fk_attachment_workspace
+            baseTableName: attachment_metadata
+            baseColumnNames: workspace_id
+            referencedTableName: workspaces
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            constraintName: fk_attachment_channel
+            baseTableName: attachment_metadata
+            baseColumnNames: channel_id
+            referencedTableName: channels
+            referencedColumnNames: id
+            onDelete: SET NULL
+
+        - addForeignKeyConstraint:
+            constraintName: fk_attachment_uploaded_by
+            baseTableName: attachment_metadata
+            baseColumnNames: uploaded_by
+            referencedTableName: users
+            referencedColumnNames: id
+
+        - createIndex:
+            indexName: idx_attachment_workspace
+            tableName: attachment_metadata
+            columns:
+              - column:
+                  name: workspace_id
+
+        - createIndex:
+            indexName: idx_attachment_channel
+            tableName: attachment_metadata
+            columns:
+              - column:
+                  name: channel_id
+
+        - createIndex:
+            indexName: idx_attachment_status
+            tableName: attachment_metadata
+            columns:
+              - column:
+                  name: status
